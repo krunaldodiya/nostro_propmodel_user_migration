@@ -9,3 +9,4 @@ wheels/
 # Virtual environments
 .venv
 users.csv
+new_users.csv

@@ -1,8 +1,16 @@
 import polars as pl
 import uuid
+import argparse
 
 
 def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="User migration tool")
+    parser.add_argument(
+        "--generate", action="store_true", help="Generate new_users.csv file"
+    )
+    args = parser.parse_args()
+
     user_role_id = "7d240ffe-f3f3-4015-9aa7-18a3acc854f7"
     admin_role_id = "4498cf39-7fe2-4059-9571-6e65632eb283"
 
@@ -47,6 +55,15 @@ def main():
     print(f"Updated columns: {df.columns}")
     print("\nFirst 5 rows:")
     print(df.head())
+
+    # Save the processed data to new_users.csv only if --generate flag is passed
+    if args.generate:
+        print("\nSaving processed data to new_users.csv...")
+        df.write_csv("new_users.csv")
+        print("Data saved successfully!")
+    else:
+        print("\nTo generate new_users.csv, run with --generate flag")
+        print("Example: python main.py --generate")
 
 
 if __name__ == "__main__":
