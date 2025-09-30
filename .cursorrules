@@ -1,0 +1,68 @@
+# User Migration Project - Cursor Rules
+
+## CRITICAL: Source File Protection
+
+- **NEVER** edit, modify, update, add, or delete anything in `users.csv`
+- **NEVER** run scripts that modify `users.csv` directly
+- **NEVER** use tools like `search_replace`, `write`, or `MultiEdit` on `users.csv`
+- **NEVER** delete or overwrite `users.csv`
+- **NEVER** create temporary scripts that modify `users.csv`
+
+## Source File Rules
+
+- `users.csv` is the **SOURCE OF TRUTH** - it must remain unchanged
+- Only **READ** from `users.csv` using `read_file` or similar read-only operations
+- All data transformations must happen in `main.py` or other processing scripts
+- The source file is immutable and protected
+
+## Allowed Operations
+
+- ✅ Read from `users.csv` to understand structure
+- ✅ Modify `main.py` to handle new columns and transformations
+- ✅ Generate `new_users.csv` as output
+- ✅ Create temporary processing scripts (but delete them after use)
+- ✅ Add new columns in the processing logic, not in the source file
+
+## Workflow Requirements
+
+1. **Source**: `users.csv` (READ-ONLY)
+2. **Processing**: `main.py` (can be modified)
+3. **Output**: `new_users.csv` (generated file)
+
+## Column Handling Strategy
+
+- If new columns are needed, add them in `main.py` processing logic
+- Use conditional checks to add missing columns with default values
+- Never modify the source CSV structure directly
+- All transformations must be done programmatically in the script
+
+## File Protection Examples
+
+❌ **FORBIDDEN:**
+
+- `search_replace` on `users.csv`
+- `write` to `users.csv`
+- `MultiEdit` on `users.csv`
+- Any script that modifies `users.csv`
+- Deleting or overwriting `users.csv`
+
+✅ **ALLOWED:**
+
+- `read_file` on `users.csv`
+- Modifying `main.py`
+- Generating `new_users.csv`
+- Creating temporary processing scripts (delete after use)
+
+## Error Prevention
+
+- If asked to modify `users.csv`, redirect to modifying `main.py` instead
+- Always explain that `users.csv` is the source and cannot be changed
+- Suggest adding column handling logic to `main.py` instead
+- Ensure all data transformations are done in the processing script
+
+## Summary
+
+- **Source**: `users.csv` (immutable)
+- **Processor**: `main.py` (modifiable)
+- **Output**: `new_users.csv` (generated)
+- **Rule**: Never touch the source, always process through the script

@@ -14,7 +14,7 @@ def main():
     user_role_id = "7d240ffe-f3f3-4015-9aa7-18a3acc854f7"
     admin_role_id = "4498cf39-7fe2-4059-9571-6e65632eb283"
 
-    # Load the CSV file with semicolon separator
+    # Load the CSV file
     df = pl.read_csv("users.csv")
 
     # Add user_uuid column with random UUIDs
@@ -46,11 +46,38 @@ def main():
     # Rename username column to email
     df = df.rename({"username": "email"})
 
-    print(df)
+    # Ensure all new columns exist with proper default values
+    # Add ref_link_count if it doesn't exist (should already exist from CSV modifications)
+    if "ref_link_count" not in df.columns:
+        df = df.with_columns(pl.lit(0).alias("ref_link_count"))
+
+    # Add used_free_count if it doesn't exist (should already exist from CSV modifications)
+    if "used_free_count" not in df.columns:
+        df = df.with_columns(pl.lit(0).alias("used_free_count"))
+
+    # Add available_count if it doesn't exist (should already exist from CSV modifications)
+    if "available_count" not in df.columns:
+        df = df.with_columns(pl.lit(0).alias("available_count"))
+
+    # Add google_app_secret if it doesn't exist (should already exist from CSV modifications)
+    if "google_app_secret" not in df.columns:
+        df = df.with_columns(pl.lit("").alias("google_app_secret"))
+
+    # Add is_google_app_verify if it doesn't exist (should already exist from CSV modifications)
+    if "is_google_app_verify" not in df.columns:
+        df = df.with_columns(pl.lit(0).alias("is_google_app_verify"))
+
+    print(f"DataFrame shape: {df.shape}")
+    print(f"Columns: {df.columns}")
+    print("\nFirst few rows:")
+    print(df.head())
 
     # Save the processed data to new_users.csv only if --generate flag is passed
     if args.generate:
         df.write_csv("new_users.csv")
+        print(
+            f"\nSuccessfully generated new_users.csv with {len(df)} rows and {len(df.columns)} columns"
+        )
 
 
 if __name__ == "__main__":
