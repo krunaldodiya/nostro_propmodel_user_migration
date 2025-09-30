@@ -21,6 +21,7 @@
   "discord_connected",
   "used_free_count",
   "available_count",
+  "trail_verification_status",
   "last_login_at",
   "created_at",
   "updated_at",

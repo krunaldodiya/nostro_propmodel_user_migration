@@ -66,6 +66,10 @@ def main():
     if "is_google_app_verify" not in df.columns:
         df = df.with_columns(pl.lit(0).alias("is_google_app_verify"))
 
+    # Add trail_verification_status if it doesn't exist
+    if "trail_verification_status" not in df.columns:
+        df = df.with_columns(pl.lit(0).alias("trail_verification_status"))
+
     # Add status column that maps to active column (1=active, 0=inactive)
     df = df.with_columns(
         pl.when(pl.col("active") == 1)
