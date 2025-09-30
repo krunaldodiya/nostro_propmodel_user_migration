@@ -2,6 +2,8 @@ import polars as pl
 import uuid
 import argparse
 import json
+import random
+import string
 
 
 def main():
@@ -69,6 +71,15 @@ def main():
     # Add trail_verification_status if it doesn't exist
     if "trail_verification_status" not in df.columns:
         df = df.with_columns(pl.lit(0).alias("trail_verification_status"))
+
+    # Add ref_code column with 8-character random alphanumeric strings
+    if "ref_code" not in df.columns:
+
+        def generate_ref_code():
+            return "".join(random.choices(string.ascii_letters + string.digits, k=8))
+
+        ref_codes = [generate_ref_code() for _ in range(len(df))]
+        df = df.with_columns(pl.Series("ref_code", ref_codes))
 
     # Add status column that maps to active column (1=active, 0=inactive)
     df = df.with_columns(

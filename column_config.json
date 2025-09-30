@@ -29,5 +29,11 @@
   "role_id",
   "accept_affiliate_terms",
   "deleted_at",
-  "uuid"
+  "ref_code",
+  "uuid",
+  "firstname",
+  "lastname",
+  "phone_verified",
+  "dob",
+  "affiliate_terms"
 ]
