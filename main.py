@@ -39,7 +39,8 @@ def main():
     df = df.with_columns(
         pl.col("ref_by_user_id")
         .map_elements(
-            lambda x: id_to_uuid.get(x) if x is not None else None, return_dtype=pl.Utf8
+            lambda x: id_to_uuid.get(x) if x is not None and x in id_to_uuid else None,
+            return_dtype=pl.Utf8,
         )
         .alias("ref_by_user_uuid")
     )
@@ -49,7 +50,7 @@ def main():
 
     # Blank out password column for security
     if "password" in df.columns:
-        df = df.with_columns(pl.lit("").alias("password"))
+        df = df.with_columns(pl.lit(None).alias("password"))
 
     # Ensure all new columns exist with proper default values
     # Add ref_link_count if it doesn't exist (should already exist from CSV modifications)
@@ -66,7 +67,7 @@ def main():
 
     # Add google_app_secret if it doesn't exist (should already exist from CSV modifications)
     if "google_app_secret" not in df.columns:
-        df = df.with_columns(pl.lit("").alias("google_app_secret"))
+        df = df.with_columns(pl.lit(None).alias("google_app_secret"))
 
     # Add is_google_app_verify if it doesn't exist (should already exist from CSV modifications)
     if "is_google_app_verify" not in df.columns:
