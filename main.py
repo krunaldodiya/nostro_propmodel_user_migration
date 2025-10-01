@@ -35,7 +35,7 @@ def main():
     # Create a mapping from id to uuid
     id_to_uuid = dict(zip(df["id"], df["uuid"]))
 
-    # Map ref_by_user_id to ref_by_user_uuid
+    # Map ref_by_user_id to ref_by_user_uuid - only include valid UUIDs
     df = df.with_columns(
         pl.col("ref_by_user_id")
         .map_elements(
@@ -43,6 +43,16 @@ def main():
             return_dtype=pl.Utf8,
         )
         .alias("ref_by_user_uuid")
+    )
+
+    # Fix ref_by_user_id column to use NULL instead of empty strings
+    df = df.with_columns(
+        pl.col("ref_by_user_id")
+        .map_elements(
+            lambda x: id_to_uuid.get(x) if x is not None and x in id_to_uuid else None,
+            return_dtype=pl.Utf8,
+        )
+        .alias("ref_by_user_id")
     )
 
     # Rename columns
@@ -114,6 +124,29 @@ def main():
     # Add dob column set to null as default
     df = df.with_columns(pl.lit(None).alias("dob"))
 
+    # Ensure all string columns use None instead of empty strings
+    string_columns = [
+        "reset_pass_hash",
+        "address",
+        "country",
+        "state",
+        "city",
+        "zip",
+        "timezone",
+        "identity_status",
+        "identity_verified_at",
+    ]
+
+    for col in string_columns:
+        if col in df.columns:
+            # Replace empty strings with None for these columns
+            df = df.with_columns(
+                pl.when(pl.col(col) == "")
+                .then(pl.lit(None))
+                .otherwise(pl.col(col))
+                .alias(col)
+            )
+
     # Load column configuration from JSON file
     try:
         with open("column_config.json", "r") as f:
@@ -141,6 +174,7 @@ def main():
         # Save the processed data to new_users.csv only if --generate flag is passed
         if args.generate:
             df_filtered.write_csv("new_users.csv")
+
             print(
                 f"\nSuccessfully generated new_users.csv with {len(df_filtered)} rows and {len(df_filtered.columns)} columns"
             )
