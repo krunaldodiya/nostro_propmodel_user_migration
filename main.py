@@ -47,6 +47,10 @@ def main():
     # Rename username column to email
     df = df.rename({"username": "email"})
 
+    # Blank out password column for security
+    if "password" in df.columns:
+        df = df.with_columns(pl.lit("").alias("password"))
+
     # Ensure all new columns exist with proper default values
     # Add ref_link_count if it doesn't exist (should already exist from CSV modifications)
     if "ref_link_count" not in df.columns:
