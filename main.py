@@ -64,6 +64,10 @@ def main():
     if "password" in df.columns:
         df = df.with_columns(pl.lit(None).alias("password"))
 
+    # Blank out reset_pass_hash column for security
+    if "reset_pass_hash" in df.columns:
+        df = df.with_columns(pl.lit(None).alias("reset_pass_hash"))
+
     # Ensure all new columns exist with proper default values
     # Add ref_link_count if it doesn't exist (should already exist from CSV modifications)
     if "ref_link_count" not in df.columns:
