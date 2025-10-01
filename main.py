@@ -45,8 +45,10 @@ def main():
         .alias("ref_by_user_uuid")
     )
 
-    # Rename username column to email
-    df = df.rename({"username": "email"})
+    # Rename columns
+    df = df.rename(
+        {"username": "email", "firstname": "first_name", "lastname": "last_name"}
+    )
 
     # Blank out password column for security
     if "password" in df.columns:
