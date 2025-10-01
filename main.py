@@ -105,6 +105,15 @@ def main():
     # Add deleted_at column set to null as default
     df = df.with_columns(pl.lit(None).alias("deleted_at"))
 
+    # Add affiliate_terms column that maps from accept_affiliate_terms
+    if "accept_affiliate_terms" in df.columns:
+        df = df.with_columns(pl.col("accept_affiliate_terms").alias("affiliate_terms"))
+    else:
+        df = df.with_columns(pl.lit(0).alias("affiliate_terms"))
+
+    # Add dob column set to null as default
+    df = df.with_columns(pl.lit(None).alias("dob"))
+
     # Load column configuration from JSON file
     try:
         with open("column_config.json", "r") as f:
