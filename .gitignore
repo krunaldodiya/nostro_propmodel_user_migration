@@ -8,5 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
-users.csv
-new_users.csv
+
+# CSV files (source and generated)
+*.csv

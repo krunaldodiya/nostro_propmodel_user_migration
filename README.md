@@ -1,6 +1,130 @@
-# Users Table Migration: MySQL → PostgreSQL
+# User Migration: MySQL → PostgreSQL
 
-This document compares the **old MySQL `users` table** with the **new PostgreSQL `users` table**.
+This document compares the **old MySQL tables** with the **new PostgreSQL tables** and provides migration scripts.
+
+## 📜 Migration Scripts
+
+### Main Entry Point (`main.py`)
+
+The unified entry point for all migration tasks. Provides a clean CLI interface to run individual or all exports.
+
+**Usage:**
+
+```bash
+# Show help
+uv run main.py --help
+
+# Preview users export
+uv run main.py --users
+
+# Generate users export
+uv run main.py --generate --users
+
+# Preview purchases export
+uv run main.py --purchases
+
+# Generate purchases export
+uv run main.py --generate --purchases
+
+# Preview discounts export
+uv run main.py --discounts
+
+# Generate discounts export
+uv run main.py --generate --discounts
+
+# Generate all exports at once
+uv run main.py --generate --all
+```
+
+### 1. Users Export (`users_export.py`)
+
+Exports users from `users.csv` to `new_users.csv` with the following transformations:
+
+- Generates new UUID for each user
+- Maps old `ref_by_user_id` (INT) to new `ref_by_user_uuid` (UUID)
+- Renames columns (username → email, firstname → first_name, etc.)
+- Adds new columns (role_id, status, updated_at, deleted_at, etc.)
+- Uses `users_column_config.json` to select which columns to export
+
+**Configuration:** Edit `users_column_config.json` to control which columns are exported.
+
+### 2. Purchases Export (`purchases_export.py`)
+
+Exports purchases from `purchases.csv` to `new_purchases.csv` with the following transformations:
+
+- Generates new UUID for each purchase
+- Maps old `user_id` (INT) to new `user_uuid` (UUID) using `new_users.csv` mapping
+- Maps old `discount_id` (INT) to new `discount_uuid` (UUID) using `new_discounts.csv` mapping
+- Preserves original `user_id` and `discount_id` for reference
+- Adds new columns (uuid, user_uuid, discount_uuid, updated_at, deleted_at)
+- Uses `purchases_column_config.json` to select which columns to export
+
+**Configuration:** Edit `purchases_column_config.json` to control which columns are exported.
+
+**Statistics:**
+
+- Total purchases: 88,950
+- Valid user mappings: 87,755 (98.7%)
+- Invalid/missing user mappings: 1,195 (1.3%)
+- Valid discount mappings: 45,599 (51.3%)
+- Invalid/missing discount mappings: 43,351 (48.7%)
+
+### 3. Discounts Export (`discounts_export.py`)
+
+Exports discount codes from `discount_codes.csv` to `new_discounts.csv` with the following transformations:
+
+- Generates new UUID for each discount code
+- Adds new columns (uuid, created_at, updated_at, deleted_at)
+- Renames `created_date` to `created_at`
+- Renames `last_modified_date` to `updated_at`
+- Uses `discounts_column_config.json` to select which columns to export
+
+**Configuration:** Edit `discounts_column_config.json` to control which columns are exported.
+
+**Statistics:**
+
+- Total discount codes: 53,900
+
+---
+
+## ⚙️ Configuration Files
+
+### `users_column_config.json`
+
+Controls which columns are exported in `new_users.csv`. Contains a JSON array of column names to include in the export.
+
+### `purchases_column_config.json`
+
+Controls which columns are exported in `new_purchases.csv`. Contains a JSON array of column names to include in the export.
+
+### `discounts_column_config.json`
+
+Controls which columns are exported in `new_discounts.csv`. Contains a JSON array of column names to include in the export.
+
+---
+
+## 📁 Project Structure
+
+```
+user_migration/
+├── main.py                          # Entry point - dispatches to export modules
+├── users_export.py                  # Users export logic
+├── purchases_export.py              # Purchases export logic
+├── discounts_export.py              # Discounts export logic
+├── users_column_config.json         # Users column configuration
+├── purchases_column_config.json     # Purchases column configuration
+├── discounts_column_config.json     # Discounts column configuration
+├── users.csv                        # Source: Original users data (READ-ONLY)
+├── purchases.csv                    # Source: Original purchases data
+├── discount_codes.csv               # Source: Original discount codes data
+├── new_users.csv                    # Output: Transformed users
+├── new_purchases.csv                # Output: Transformed purchases
+└── new_discounts.csv                # Output: Transformed discount codes
+```
+
+---
+
+# 📊 Users Table Migration
 
 ---
 

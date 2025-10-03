@@ -1,0 +1,18 @@
+[
+  "id",
+  "uuid",
+  "code",
+  "status",
+  "max_usages_count",
+  "current_usages_count",
+  "discount",
+  "discount_code_end_date",
+  "group_name",
+  "account_balance",
+  "challenge_amount",
+  "email",
+  "challenge_step",
+  "created_at",
+  "updated_at",
+  "deleted_at"
+]
