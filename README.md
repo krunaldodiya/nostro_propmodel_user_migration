@@ -73,33 +73,37 @@ Exports purchases from `purchases.csv` to `new_purchases.csv` with the following
 
 Exports discount codes from `discount_codes.csv` to `new_discount_codes.csv` with the following transformations:
 
-- Generates new UUID for each discount code
+- Generates new UUID for each discount code (replaces `id` as primary key)
 - Converts `status` from string to integer (`ACTIVE` → 1, `INACTIVE` → 0)
-- Adds PostgreSQL-compatible renamed columns:
-  - `max_usage_count` from `max_usages_count` (singular form)
-  - `current_usage_count` from `current_usages_count` (singular form)
-  - `end_date` from `discount_code_end_date` (simplified name)
-- Adds `name` column with same value as `code` (for PostgreSQL compatibility)
-- Adds `start_date` column with same value as `created_at`
-- Adds `commission_percentage` column with same value as `discount`
-- Adds `type` column with default value `'admin'`
-- Adds `created_by` column with UUID `f965141e-43f0-4992-a742-7899edbe1ca5`
-- Adds new columns (uuid, name, start_date, type, commission_percentage, created_by, created_at, updated_at, deleted_at)
-- Renames `created_date` to `created_at`
-- Renames `last_modified_date` to `updated_at`
-- Uses `discounts_column_config.json` to select which columns to export
+- Maps MySQL column names to PostgreSQL names:
+  - `max_usages_count` → `max_usage_count` (singular form)
+  - `current_usages_count` → `current_usage_count` (singular form)
+  - `discount_code_end_date` → `end_date` (simplified name)
+  - `created_date` → `created_at`
+  - `last_modified_date` → `updated_at`
+- Adds new PostgreSQL-only columns:
+  - `name` (from `code`)
+  - `start_date` (from `created_at`)
+  - `commission_percentage` (from `discount`)
+  - `type` (default: `'admin'`)
+  - `created_by` (UUID: `f965141e-43f0-4992-a742-7899edbe1ca5`)
+  - `deleted_at` (NULL for soft deletes)
+- Removes MySQL-only columns: `id`, `group_name`, `account_balance`
+- Exports only PostgreSQL schema columns (18 total)
+- Uses `discounts_column_config.json` to define the exact PostgreSQL schema
 
 **Configuration:** Edit `discounts_column_config.json` to control which columns are exported.
 
 **Statistics:**
 
 - Total discount codes: 53,900
-- Total columns exported: 24 (includes both MySQL and PostgreSQL column names)
+- Total columns exported: 18 (PostgreSQL schema only)
 - Status conversion: 53,779 active (1) and 118 inactive (0)
-- Column mappings maintained for migration compatibility
+- File size: 13 MB
 - All records have `type='admin'` by default
 - All records have `created_by='f965141e-43f0-4992-a742-7899edbe1ca5'`
 - `commission_percentage` mirrors `discount` value
+- Removed columns: `id`, `max_usages_count`, `current_usages_count`, `discount_code_end_date`, `group_name`, `account_balance`
 
 ---
 
@@ -115,7 +119,7 @@ Controls which columns are exported in `new_purchases.csv`. Contains a JSON arra
 
 ### `discounts_column_config.json`
 
-Controls which columns are exported in `new_discount_codes.csv`. Contains a JSON array of column names to include in the export.
+Controls which columns are exported in `new_discount_codes.csv`. Contains a JSON array of the 18 PostgreSQL schema columns in the exact order matching the database schema.
 
 ---
 
