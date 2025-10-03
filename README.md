@@ -74,7 +74,7 @@ Exports purchases from `purchases.csv` to `new_purchases.csv` with the following
 Exports discount codes from `discount_codes.csv` to `new_discount_codes.csv` with the following transformations:
 
 - Generates new UUID for each discount code (replaces `id` as primary key)
-- Converts `status` from string to integer (`ACTIVE` → 1, `INACTIVE` → 0)
+- Converts `status` to lowercase (`ACTIVE` → 'active', `INACTIVE` → 'inactive')
 - Maps MySQL column names to PostgreSQL names:
   - `max_usages_count` → `max_usage_count` (singular form)
   - `current_usages_count` → `current_usage_count` (singular form)
@@ -98,7 +98,7 @@ Exports discount codes from `discount_codes.csv` to `new_discount_codes.csv` wit
 
 - Total discount codes: 53,900
 - Total columns exported: 18 (PostgreSQL schema only)
-- Status conversion: 53,779 active (1) and 118 inactive (0)
+- Status conversion: 53,777 'active' and 117 'inactive'
 - File size: 13 MB
 - All records have `type='admin'` by default
 - All records have `created_by='f965141e-43f0-4992-a742-7899edbe1ca5'`

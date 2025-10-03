@@ -24,12 +24,12 @@ def export_discounts(generate=False):
     if "code" in discounts_df.columns:
         discounts_df = discounts_df.with_columns(pl.col("code").alias("name"))
 
-    # Convert status from string to integer (ACTIVE=1, INACTIVE=0)
+    # Convert status to lowercase (ACTIVE → 'active', INACTIVE → 'inactive')
     if "status" in discounts_df.columns:
         discounts_df = discounts_df.with_columns(
             pl.when(pl.col("status").str.to_uppercase() == "ACTIVE")
-            .then(pl.lit(1))
-            .otherwise(pl.lit(0))
+            .then(pl.lit("active"))
+            .otherwise(pl.lit("inactive"))
             .alias("status")
         )
 

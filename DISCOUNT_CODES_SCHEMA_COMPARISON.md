@@ -15,7 +15,7 @@ This document compares the structure of `discount_codes.csv` (MySQL export) with
 | `id`                     | `uuid`                  | ⚠️ **CHANGED**      | Changed from INT to UUID, now PRIMARY KEY with `gen_random_uuid()`                                      |
 | -                        | `name`                  | ➕ **NEW**          | New column in PostgreSQL - **Added in export using `code` as value**                                    |
 | `code`                   | `code`                  | ✅ **SAME**         | Both exist, but PostgreSQL has NOT NULL constraint                                                      |
-| `status`                 | `status`                | ⚠️ **TYPE CHANGED** | CSV: varchar (ACTIVE/INACTIVE), PostgreSQL: varchar - **Converted to int in export (1/0)**              |
+| `status`                 | `status`                | ⚠️ **NORMALIZED**   | CSV: varchar (ACTIVE/INACTIVE), PostgreSQL: varchar - **Converted to lowercase ('active'/'inactive')**  |
 | `max_usages_count`       | `max_usage_count`       | ⚠️ **RENAMED**      | Renamed from plural to singular, PostgreSQL has DEFAULT 0 - **Both columns included in export**         |
 | `current_usages_count`   | `current_usage_count`   | ⚠️ **RENAMED**      | Renamed from plural to singular, PostgreSQL has DEFAULT 0 - **Both columns included in export**         |
 | `discount`               | `discount`              | ✅ **SAME**         | Both exist, PostgreSQL has DEFAULT 0                                                                    |
@@ -133,13 +133,13 @@ PostgreSQL: {"amount": 10000} or structured JSON
 - All existing `id` values need to be mapped to newly generated UUIDs
 - Foreign key relationships in other tables must be updated
 
-### 2. Status Conversion
+### 2. Status Normalization
 
-✅ **HANDLED** - Status column converted from string to integer:
+✅ **HANDLED** - Status column normalized to lowercase:
 
-- `ACTIVE` → `1` (53,779 records)
-- `INACTIVE` → `0` (118 records)
-- Any other value → `0` (treated as inactive)
+- `ACTIVE` → `'active'` (53,777 records)
+- `INACTIVE` → `'inactive'` (117 records)
+- Any other value → `'inactive'` (treated as inactive)
 
 ### 3. JSON Transformation
 
