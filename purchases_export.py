@@ -49,10 +49,10 @@ def export_purchases(generate=False):
     print(f"  Valid user mappings: {valid_user_mappings}")
     print(f"  Invalid/missing user mappings: {invalid_user_mappings}")
 
-    # Load the new_discounts.csv file to get the discount id-to-uuid mapping
+    # Load the new_discount_codes.csv file to get the discount id-to-uuid mapping
     try:
-        print("\nLoading new_discounts.csv for discount mapping...")
-        discounts_df = pl.read_csv("new_discounts.csv")
+        print("\nLoading new_discount_codes.csv for discount mapping...")
+        discounts_df = pl.read_csv("new_discount_codes.csv")
         print(f"Loaded {len(discounts_df)} discount codes")
 
         # Create a mapping from old discount id to new uuid
@@ -85,7 +85,9 @@ def export_purchases(generate=False):
         print(f"  Invalid/missing discount mappings: {invalid_discount_mappings}")
 
     except FileNotFoundError:
-        print("\nWarning: new_discounts.csv not found. Skipping discount UUID mapping.")
+        print(
+            "\nWarning: new_discount_codes.csv not found. Skipping discount UUID mapping."
+        )
         print("Please run: uv run main.py --generate --discounts")
         # Add discount_uuid column with null values
         purchases_df = purchases_df.with_columns(pl.lit(None).alias("discount_uuid"))

@@ -54,7 +54,7 @@ Exports purchases from `purchases.csv` to `new_purchases.csv` with the following
 
 - Generates new UUID for each purchase
 - Maps old `user_id` (INT) to new `user_uuid` (UUID) using `new_users.csv` mapping
-- Maps old `discount_id` (INT) to new `discount_uuid` (UUID) using `new_discounts.csv` mapping
+- Maps old `discount_id` (INT) to new `discount_uuid` (UUID) using `new_discount_codes.csv` mapping
 - Preserves original `user_id` and `discount_id` for reference
 - Adds new columns (uuid, user_uuid, discount_uuid, updated_at, deleted_at)
 - Uses `purchases_column_config.json` to select which columns to export
@@ -71,10 +71,20 @@ Exports purchases from `purchases.csv` to `new_purchases.csv` with the following
 
 ### 3. Discounts Export (`discounts_export.py`)
 
-Exports discount codes from `discount_codes.csv` to `new_discounts.csv` with the following transformations:
+Exports discount codes from `discount_codes.csv` to `new_discount_codes.csv` with the following transformations:
 
 - Generates new UUID for each discount code
-- Adds new columns (uuid, created_at, updated_at, deleted_at)
+- Converts `status` from string to integer (`ACTIVE` → 1, `INACTIVE` → 0)
+- Adds PostgreSQL-compatible renamed columns:
+  - `max_usage_count` from `max_usages_count` (singular form)
+  - `current_usage_count` from `current_usages_count` (singular form)
+  - `end_date` from `discount_code_end_date` (simplified name)
+- Adds `name` column with same value as `code` (for PostgreSQL compatibility)
+- Adds `start_date` column with same value as `created_at`
+- Adds `commission_percentage` column with same value as `discount`
+- Adds `type` column with default value `'admin'`
+- Adds `created_by` column with UUID `f965141e-43f0-4992-a742-7899edbe1ca5`
+- Adds new columns (uuid, name, start_date, type, commission_percentage, created_by, created_at, updated_at, deleted_at)
 - Renames `created_date` to `created_at`
 - Renames `last_modified_date` to `updated_at`
 - Uses `discounts_column_config.json` to select which columns to export
@@ -84,6 +94,12 @@ Exports discount codes from `discount_codes.csv` to `new_discounts.csv` with the
 **Statistics:**
 
 - Total discount codes: 53,900
+- Total columns exported: 24 (includes both MySQL and PostgreSQL column names)
+- Status conversion: 53,779 active (1) and 118 inactive (0)
+- Column mappings maintained for migration compatibility
+- All records have `type='admin'` by default
+- All records have `created_by='f965141e-43f0-4992-a742-7899edbe1ca5'`
+- `commission_percentage` mirrors `discount` value
 
 ---
 
@@ -99,7 +115,7 @@ Controls which columns are exported in `new_purchases.csv`. Contains a JSON arra
 
 ### `discounts_column_config.json`
 
-Controls which columns are exported in `new_discounts.csv`. Contains a JSON array of column names to include in the export.
+Controls which columns are exported in `new_discount_codes.csv`. Contains a JSON array of column names to include in the export.
 
 ---
 
@@ -119,7 +135,7 @@ user_migration/
 ├── discount_codes.csv               # Source: Original discount codes data
 ├── new_users.csv                    # Output: Transformed users
 ├── new_purchases.csv                # Output: Transformed purchases
-└── new_discounts.csv                # Output: Transformed discount codes
+└── new_discount_codes.csv                # Output: Transformed discount codes
 ```
 
 ---
