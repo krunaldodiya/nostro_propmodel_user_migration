@@ -35,8 +35,8 @@ GROUPS_TO_KEEP = [
     "demo\\Nostro\\U-TAF-1-A",
 ]
 
-print("Loading platform_groups.csv...")
-df = pl.read_csv("platform_groups.csv")
+print("Loading csv/platform_groups.csv...")
+df = pl.read_csv("csv/platform_groups.csv")
 print(f"Total rows in original file: {len(df)}")
 
 # Show unique group names that start with 'demo\'

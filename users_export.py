@@ -15,9 +15,9 @@ def export_users(generate=False):
     user_role_id = "7d240ffe-f3f3-4015-9aa7-18a3acc854f7"
     admin_role_id = "4498cf39-7fe2-4059-9571-6e65632eb283"
 
-    print("Loading users.csv...")
+    print("Loading csv/users.csv...")
     # Load the CSV file
-    df = pl.read_csv("users.csv")
+    df = pl.read_csv("csv/users.csv")
     print(f"Loaded {len(df)} users")
 
     # Add uuid column with random UUIDs

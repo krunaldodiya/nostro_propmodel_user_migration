@@ -10,9 +10,9 @@ def export_discounts(generate=False):
     Args:
         generate (bool): If True, generates new_discount_codes.csv file. If False, only previews.
     """
-    print("Loading discount_codes.csv...")
+    print("Loading csv/discount_codes.csv...")
     # Load the CSV file
-    discounts_df = pl.read_csv("discount_codes.csv")
+    discounts_df = pl.read_csv("csv/discount_codes.csv")
     print(f"Loaded {len(discounts_df)} discount codes")
 
     # Add uuid column with random UUIDs (insert right after id)

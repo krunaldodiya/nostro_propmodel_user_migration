@@ -12,19 +12,21 @@ def export_purchases(generate=False):
     """
 
     # Load the purchases CSV file
-    print("Loading purchases.csv...")
+    print("Loading csv/purchases.csv...")
     # Use infer_schema_length to properly detect column types
-    purchases_df = pl.read_csv("purchases.csv", infer_schema_length=100000)
+    purchases_df = pl.read_csv("csv/purchases.csv", infer_schema_length=100000)
     print(f"Loaded {len(purchases_df)} purchases")
 
-    # Load the new_users.csv file to get the id-to-uuid mapping
-    print("Loading new_users.csv for user mapping...")
-    users_df = pl.read_csv("new_users.csv")
-    print(f"Loaded {len(users_df)} users")
+    # Load the original users.csv and new_users.csv to create id-to-uuid mapping
+    print("Loading user files for user mapping...")
+    original_users_df = pl.read_csv("csv/users.csv")
+    new_users_df = pl.read_csv("new_users.csv", infer_schema_length=100000)
+    print(
+        f"Loaded {len(original_users_df)} original users and {len(new_users_df)} new users"
+    )
 
-    # Create a mapping from old user id to new uuid
-    # We only need the id and uuid columns
-    id_to_uuid = dict(zip(users_df["id"], users_df["uuid"]))
+    # Create a mapping from old user id to new uuid by aligning rows
+    id_to_uuid = dict(zip(original_users_df["id"], new_users_df["uuid"]))
     print(f"Created mapping for {len(id_to_uuid)} users")
 
     # Add uuid column for purchases
@@ -53,7 +55,7 @@ def export_purchases(generate=False):
     try:
         print("\nLoading discount files for discount mapping...")
         original_discounts_df = pl.read_csv(
-            "discount_codes.csv", infer_schema_length=100000
+            "csv/discount_codes.csv", infer_schema_length=100000
         )
         new_discounts_df = pl.read_csv(
             "new_discount_codes.csv", infer_schema_length=100000

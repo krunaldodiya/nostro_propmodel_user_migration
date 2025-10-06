@@ -38,7 +38,7 @@ uv run main.py --generate --all
 
 ### 1. Users Export (`users_export.py`)
 
-Exports users from `users.csv` to `new_users.csv` with the following transformations:
+Exports users from `csv/users.csv` to `new_users.csv` with the following transformations:
 
 - Generates new UUID for each user
 - Maps old `ref_by_user_id` (INT) to new `ref_by_user_uuid` (UUID)
@@ -50,11 +50,11 @@ Exports users from `users.csv` to `new_users.csv` with the following transformat
 
 ### 2. Purchases Export (`purchases_export.py`)
 
-Exports purchases from `purchases.csv` to `new_purchases.csv` with the following transformations:
+Exports purchases from `csv/purchases.csv` to `new_purchases.csv` with the following transformations:
 
 - Generates new UUID for each purchase (replaces `id` as primary key)
 - Maps old `user_id` (INT) to new `user_uuid` (UUID) using `new_users.csv` mapping
-- Maps old `discount_id` (INT) to new `discount_uuid` (UUID) using `discount_codes.csv` and `new_discount_codes.csv` alignment
+- Maps old `discount_id` (INT) to new `discount_uuid` (UUID) using `csv/discount_codes.csv` and `new_discount_codes.csv` alignment
 - Adds new PostgreSQL-only columns:
   - `updated_at` (from `created_at`)
   - `webhook_response` (NULL - for future webhook data)
@@ -81,7 +81,7 @@ Exports purchases from `purchases.csv` to `new_purchases.csv` with the following
 
 ### 3. Discounts Export (`discounts_export.py`)
 
-Exports discount codes from `discount_codes.csv` to `new_discount_codes.csv` with the following transformations:
+Exports discount codes from `csv/discount_codes.csv` to `new_discount_codes.csv` with the following transformations:
 
 - Generates new UUID for each discount code (replaces `id` as primary key)
 - Converts `status` to lowercase (`ACTIVE` → 'active', `INACTIVE` → 'inactive')
@@ -144,12 +144,13 @@ user_migration/
 ├── users_column_config.json         # Users column configuration
 ├── purchases_column_config.json     # Purchases column configuration
 ├── discounts_column_config.json     # Discounts column configuration
-├── users.csv                        # Source: Original users data (READ-ONLY)
-├── purchases.csv                    # Source: Original purchases data
-├── discount_codes.csv               # Source: Original discount codes data
+├── csv/                             # Source files directory
+│   ├── users.csv                    # Original users data (READ-ONLY)
+│   ├── purchases.csv                # Original purchases data
+│   └── discount_codes.csv           # Original discount codes data
 ├── new_users.csv                    # Output: Transformed users
 ├── new_purchases.csv                # Output: Transformed purchases
-└── new_discount_codes.csv                # Output: Transformed discount codes
+└── new_discount_codes.csv           # Output: Transformed discount codes
 ```
 
 ---
