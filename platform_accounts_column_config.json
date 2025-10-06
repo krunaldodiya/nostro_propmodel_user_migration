@@ -3,6 +3,7 @@
   "uuid",
   "user_id",
   "user_uuid",
+  "platform_user_id",
   "purchase_id",
   "purchase_uuid",
   "login",

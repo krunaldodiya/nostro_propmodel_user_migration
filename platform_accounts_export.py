@@ -226,6 +226,14 @@ def export_platform_accounts(generate=False):
                 pl.lit("trial").alias("account_stage")
             )
 
+    # Add platform_user_id column (null for now)
+    if "platform_user_id" not in accounts_df.columns:
+        accounts_df = accounts_df.with_columns(pl.lit(None).alias("platform_user_id"))
+
+    # Set action_type to 'challenge'
+    if "action_type" in accounts_df.columns:
+        accounts_df = accounts_df.with_columns(pl.lit("challenge").alias("action_type"))
+
     # Load column configuration from JSON file
     try:
         with open("platform_accounts_column_config.json", "r") as f:
