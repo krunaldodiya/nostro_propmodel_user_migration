@@ -1,7 +1,5 @@
 [
-  "id",
   "uuid",
-  "user_id",
   "user_uuid",
   "amount_total",
   "currency",
@@ -9,16 +7,16 @@
   "payment_status",
   "is_paid_aff_commission",
   "user_data",
-  "created_at",
   "original_amount",
-  "discount",
-  "discount_code",
-  "discount_id",
   "discount_uuid",
   "already_paid",
   "payment_transaction_id",
   "payment_response",
   "payment_attempt_count",
+  "created_at",
   "updated_at",
-  "deleted_at"
+  "webhook_response",
+  "purchase_type",
+  "competition_uuid",
+  "ip"
 ]

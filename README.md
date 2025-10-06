@@ -52,22 +52,32 @@ Exports users from `users.csv` to `new_users.csv` with the following transformat
 
 Exports purchases from `purchases.csv` to `new_purchases.csv` with the following transformations:
 
-- Generates new UUID for each purchase
+- Generates new UUID for each purchase (replaces `id` as primary key)
 - Maps old `user_id` (INT) to new `user_uuid` (UUID) using `new_users.csv` mapping
-- Maps old `discount_id` (INT) to new `discount_uuid` (UUID) using `new_discount_codes.csv` mapping
-- Preserves original `user_id` and `discount_id` for reference
-- Adds new columns (uuid, user_uuid, discount_uuid, updated_at, deleted_at)
-- Uses `purchases_column_config.json` to select which columns to export
+- Maps old `discount_id` (INT) to new `discount_uuid` (UUID) using `discount_codes.csv` and `new_discount_codes.csv` alignment
+- Adds new PostgreSQL-only columns:
+  - `updated_at` (from `created_at`)
+  - `webhook_response` (NULL - for future webhook data)
+  - `purchase_type` (NULL - categorizes purchase)
+  - `competition_uuid` (NULL - links to competitions)
+  - `ip` (NULL - stores user IP address)
+- Removes MySQL-only columns: `id`, `user_id`, `discount_id`, `discount`, `discount_code`, `deleted_at`
+- Exports only PostgreSQL schema columns (20 total)
+- Uses `purchases_column_config.json` to define the exact PostgreSQL schema
 
 **Configuration:** Edit `purchases_column_config.json` to control which columns are exported.
 
 **Statistics:**
 
-- Total purchases: 88,950
-- Valid user mappings: 87,755 (98.7%)
-- Invalid/missing user mappings: 1,195 (1.3%)
-- Valid discount mappings: 45,599 (51.3%)
-- Invalid/missing discount mappings: 43,351 (48.7%)
+- Total purchases: 89,135
+- Total columns exported: 20 (PostgreSQL schema only)
+- File size: 121 MB
+- Valid user mappings: 87,903 (98.6%)
+- Invalid/missing user mappings: 1,232 (1.4%)
+- Valid discount mappings: 45,751 (51.3%)
+- Invalid/missing discount mappings: 43,384 (48.7%)
+- Removed columns: `id`, `user_id`, `discount_id`, `discount`, `discount_code`, `deleted_at`
+- New columns: `webhook_response`, `purchase_type`, `competition_uuid`, `ip`
 
 ### 3. Discounts Export (`discounts_export.py`)
 
@@ -115,7 +125,7 @@ Controls which columns are exported in `new_users.csv`. Contains a JSON array of
 
 ### `purchases_column_config.json`
 
-Controls which columns are exported in `new_purchases.csv`. Contains a JSON array of column names to include in the export.
+Controls which columns are exported in `new_purchases.csv`. Contains a JSON array of the 20 PostgreSQL schema columns in the exact order matching the database schema.
 
 ### `discounts_column_config.json`
 

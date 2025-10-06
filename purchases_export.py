@@ -105,9 +105,20 @@ def export_purchases(generate=False):
             pl.col("created_at").alias("updated_at")
         )
 
-    # Add deleted_at column set to null as default
-    if "deleted_at" not in purchases_df.columns:
-        purchases_df = purchases_df.with_columns(pl.lit(None).alias("deleted_at"))
+    # Add new PostgreSQL columns that don't exist in the CSV
+    if "webhook_response" not in purchases_df.columns:
+        purchases_df = purchases_df.with_columns(pl.lit(None).alias("webhook_response"))
+
+    if "purchase_type" not in purchases_df.columns:
+        purchases_df = purchases_df.with_columns(
+            pl.lit("challenge").alias("purchase_type")
+        )
+
+    if "competition_uuid" not in purchases_df.columns:
+        purchases_df = purchases_df.with_columns(pl.lit(None).alias("competition_uuid"))
+
+    if "ip" not in purchases_df.columns:
+        purchases_df = purchases_df.with_columns(pl.lit(None).alias("ip"))
 
     # Load column configuration from JSON file
     try:
