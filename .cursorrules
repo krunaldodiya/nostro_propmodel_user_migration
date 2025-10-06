@@ -66,3 +66,118 @@
 - **Processor**: `main.py` (modifiable)
 - **Output**: `new_users.csv` (generated)
 - **Rule**: Never touch the source, always process through the script
+
+---
+
+## CRITICAL: CSV Generation & Execution Restrictions
+
+### STRICT RULES: Never Auto-Generate CSV Files
+
+- **NEVER** run `main.py --generate` commands without explicit user instruction
+- **NEVER** execute scripts that generate CSV files (`new_users.csv`, `new_purchases.csv`, `new_discount_codes.csv`, `new_platform_accounts.csv`) unless user explicitly requests generation
+- **NEVER** automatically run `uv run main.py --generate` or similar commands
+- **NEVER** use `--generate` flag unless user specifically asks to generate files
+- **ALWAYS** ask for confirmation before running any CSV generation command
+
+### Preview vs Generate
+
+- ✅ **ALLOWED WITHOUT ASKING**: Preview commands (without `--generate` flag)
+
+  - `uv run main.py --users`
+  - `uv run main.py --purchases`
+  - `uv run main.py --discounts`
+  - `uv run main.py --platform-accounts`
+
+- ❌ **FORBIDDEN WITHOUT EXPLICIT USER REQUEST**: Generate commands
+  - `uv run main.py --generate --users`
+  - `uv run main.py --generate --purchases`
+  - `uv run main.py --generate --discounts`
+  - `uv run main.py --generate --platform-accounts`
+  - `uv run main.py --generate --all`
+
+### CSV File Protection
+
+**All CSV files in `csv/` folder are READ-ONLY:**
+
+- `csv/users.csv` (immutable source)
+- `csv/purchases.csv` (immutable source)
+- `csv/discount_codes.csv` (immutable source)
+- `csv/mt5_users.csv` (immutable source)
+- `csv/platform_groups.csv` (immutable source)
+
+**Generated CSV files should only be created when explicitly requested:**
+
+- `new_users.csv`
+- `new_purchases.csv`
+- `new_discount_codes.csv`
+- `new_platform_accounts.csv`
+- `new_platform_groups.csv`
+
+### When User Requests CSV Generation
+
+**User must explicitly say:**
+
+- "Generate the CSV file"
+- "Run the export with --generate"
+- "Create the output file"
+- "Execute the generation command"
+
+**ALWAYS confirm before executing:**
+
+```
+User wants to generate [table_name].
+Running: uv run main.py --generate --[flag]
+This will create/overwrite new_[table_name].csv
+```
+
+### Examples
+
+❌ **FORBIDDEN (without explicit request):**
+
+```bash
+# User: "Let's check if the users export works"
+# AI: Running `uv run main.py --generate --users`  ← WRONG!
+```
+
+✅ **CORRECT APPROACH:**
+
+```bash
+# User: "Let's check if the users export works"
+# AI: Running `uv run main.py --users` (preview only)  ← CORRECT!
+```
+
+❌ **FORBIDDEN (without explicit request):**
+
+```bash
+# User: "Test the platform accounts export"
+# AI: Running `uv run main.py --generate --platform-accounts`  ← WRONG!
+```
+
+✅ **CORRECT APPROACH:**
+
+```bash
+# User: "Test the platform accounts export"
+# AI: Running `uv run main.py --platform-accounts` (preview only)  ← CORRECT!
+```
+
+✅ **CORRECT (with explicit request):**
+
+```bash
+# User: "Generate all CSV files"
+# AI: Confirmed. Running `uv run main.py --generate --all`  ← CORRECT!
+```
+
+### Safety Guidelines
+
+1. **Default to Preview Mode**: Always use preview mode (no `--generate`) unless explicitly told to generate
+2. **Ask for Confirmation**: When user asks to "generate" or "create" files, confirm the command before executing
+3. **Explain Impact**: Inform user that generation will create/overwrite files (can be large, 100+ MB)
+4. **Size Awareness**: Generated files can be very large (users: 21MB, purchases: 127MB, etc.)
+
+### Summary of Generation Rules
+
+- 🚫 **NEVER** auto-run `--generate` commands
+- 🚫 **NEVER** create CSV files without explicit user request
+- ✅ **ALWAYS** use preview mode by default
+- ✅ **ALWAYS** ask for confirmation before generating large files
+- ✅ **ONLY** generate when user explicitly requests: "generate", "create", "export to file"

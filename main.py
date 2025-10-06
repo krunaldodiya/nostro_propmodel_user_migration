@@ -30,6 +30,12 @@ Examples:
   # Generate discounts export
   uv run main.py --generate --discounts
 
+  # Preview platform accounts export
+  uv run main.py --platform-accounts
+
+  # Generate platform accounts export
+  uv run main.py --generate --platform-accounts
+
   # Generate all exports
   uv run main.py --generate --all
         """,
@@ -51,12 +57,24 @@ Examples:
         "--discounts", action="store_true", help="Export discounts table"
     )
 
+    parser.add_argument(
+        "--platform-accounts",
+        action="store_true",
+        help="Export platform accounts table",
+    )
+
     parser.add_argument("--all", action="store_true", help="Export all tables")
 
     args = parser.parse_args()
 
     # If no specific table is selected, show help
-    if not (args.users or args.purchases or args.discounts or args.all):
+    if not (
+        args.users
+        or args.purchases
+        or args.discounts
+        or args.platform_accounts
+        or args.all
+    ):
         parser.print_help()
         sys.exit(1)
 
@@ -64,7 +82,7 @@ Examples:
     exports_to_run = []
 
     if args.all:
-        exports_to_run = ["users", "purchases", "discounts"]
+        exports_to_run = ["users", "purchases", "discounts", "platform_accounts"]
     else:
         if args.users:
             exports_to_run.append("users")
@@ -72,6 +90,8 @@ Examples:
             exports_to_run.append("purchases")
         if args.discounts:
             exports_to_run.append("discounts")
+        if args.platform_accounts:
+            exports_to_run.append("platform_accounts")
 
     # Run exports
     for export_type in exports_to_run:
@@ -92,6 +112,10 @@ Examples:
                 from discounts_export import export_discounts
 
                 export_discounts(generate=args.generate)
+            elif export_type == "platform_accounts":
+                from platform_accounts_export import export_platform_accounts
+
+                export_platform_accounts(generate=args.generate)
         except Exception as e:
             print(f"\n❌ Error during {export_type} export: {e}")
             import traceback
