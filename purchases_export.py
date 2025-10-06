@@ -49,14 +49,21 @@ def export_purchases(generate=False):
     print(f"  Valid user mappings: {valid_user_mappings}")
     print(f"  Invalid/missing user mappings: {invalid_user_mappings}")
 
-    # Load the new_discount_codes.csv file to get the discount id-to-uuid mapping
+    # Load the discount_codes.csv and new_discount_codes.csv to create id-to-uuid mapping
     try:
-        print("\nLoading new_discount_codes.csv for discount mapping...")
-        discounts_df = pl.read_csv("new_discount_codes.csv")
-        print(f"Loaded {len(discounts_df)} discount codes")
+        print("\nLoading discount files for discount mapping...")
+        original_discounts_df = pl.read_csv(
+            "discount_codes.csv", infer_schema_length=100000
+        )
+        new_discounts_df = pl.read_csv(
+            "new_discount_codes.csv", infer_schema_length=100000
+        )
+        print(f"Loaded {len(original_discounts_df)} discount codes")
 
-        # Create a mapping from old discount id to new uuid
-        discount_id_to_uuid = dict(zip(discounts_df["id"], discounts_df["uuid"]))
+        # Create a mapping from old discount id to new uuid by aligning rows
+        discount_id_to_uuid = dict(
+            zip(original_discounts_df["id"], new_discounts_df["uuid"])
+        )
         print(f"Created mapping for {len(discount_id_to_uuid)} discount codes")
 
         # Map discount_id to discount_uuid using the discount_id_to_uuid mapping
