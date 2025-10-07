@@ -8,6 +8,8 @@
   "purchase_uuid",
   "login",
   "platform_login_id",
+  "main_password",
+  "investor_password",
   "group",
   "platform_group_uuid",
   "initial_balance",

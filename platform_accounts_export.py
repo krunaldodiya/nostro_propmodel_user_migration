@@ -16,6 +16,73 @@ def export_platform_accounts(generate=False):
     accounts_df = pl.read_csv("csv/mt5_users.csv", infer_schema_length=100000)
     print(f"Loaded {len(accounts_df)} platform accounts")
 
+    # Load account_data.csv for password mapping
+    print("\nLoading csv/account_data.csv for password mapping...")
+    try:
+        account_data_df = pl.read_csv(
+            "csv/account_data.csv", infer_schema_length=100000
+        )
+        print(f"Loaded {len(account_data_df)} account data records")
+
+        # Create mapping from account_login to passwords
+        # Convert account_login to string to ensure proper matching with login column
+        login_to_passwords = dict(
+            zip(
+                account_data_df["account_login"].cast(pl.Utf8),
+                zip(
+                    account_data_df["main_password"],
+                    account_data_df["investor_password"],
+                ),
+            )
+        )
+        print(f"Created password mapping for {len(login_to_passwords)} accounts")
+
+        # Map passwords based on login (convert login to string for matching)
+        accounts_df = accounts_df.with_columns(
+            pl.col("login")
+            .cast(pl.Utf8)
+            .map_elements(
+                lambda x: (
+                    login_to_passwords.get(x)[0]
+                    if x is not None and x in login_to_passwords
+                    else None
+                ),
+                return_dtype=pl.Utf8,
+            )
+            .alias("main_password")
+        )
+
+        accounts_df = accounts_df.with_columns(
+            pl.col("login")
+            .cast(pl.Utf8)
+            .map_elements(
+                lambda x: (
+                    login_to_passwords.get(x)[1]
+                    if x is not None and x in login_to_passwords
+                    else None
+                ),
+                return_dtype=pl.Utf8,
+            )
+            .alias("investor_password")
+        )
+
+        valid_password_mappings = accounts_df.filter(
+            pl.col("main_password").is_not_null()
+        ).height
+        invalid_password_mappings = accounts_df.filter(
+            pl.col("main_password").is_null()
+        ).height
+        print(f"  Valid password mappings: {valid_password_mappings}")
+        print(f"  Invalid/missing password mappings: {invalid_password_mappings}")
+
+    except FileNotFoundError:
+        print(
+            "\n⚠️  Warning: csv/account_data.csv not found. Skipping password mapping."
+        )
+        accounts_df = accounts_df.with_columns(
+            pl.lit(None).alias("main_password"), pl.lit(None).alias("investor_password")
+        )
+
     # Generate UUID for each account
     print("\nGenerating UUIDs for platform accounts...")
     accounts_df = accounts_df.with_columns(
