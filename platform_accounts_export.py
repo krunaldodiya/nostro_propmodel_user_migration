@@ -16,6 +16,77 @@ def export_platform_accounts(generate=False):
     accounts_df = pl.read_csv("csv/mt5_users.csv", infer_schema_length=100000)
     print(f"Loaded {len(accounts_df)} platform accounts")
 
+    # Load account_stats.csv for group mapping (primary source)
+    print("\nLoading csv/account_stats.csv for group mapping...")
+    try:
+        account_stats_df = pl.read_csv(
+            "csv/account_stats.csv", infer_schema_length=100000
+        )
+        print(f"Loaded {len(account_stats_df)} account stats records")
+
+        # Create mapping from account_login to group
+        # Filter out empty/null groups from account_stats
+        account_stats_with_group = account_stats_df.filter(
+            pl.col("group").is_not_null() & (pl.col("group") != "")
+        )
+
+        login_to_group_stats = dict(
+            zip(
+                account_stats_with_group["account_login"].cast(pl.Utf8),
+                account_stats_with_group["group"],
+            )
+        )
+        print(
+            f"Created group mapping from account_stats for {len(login_to_group_stats)} accounts"
+        )
+
+        # Store original group from mt5_users as backup
+        accounts_df = accounts_df.with_columns(pl.col("group").alias("group_backup"))
+
+        # Map group from account_stats (primary), fallback to mt5_users group (backup)
+        accounts_df = accounts_df.with_columns(
+            pl.col("login")
+            .cast(pl.Utf8)
+            .map_elements(
+                lambda x: (
+                    login_to_group_stats.get(x)
+                    if x is not None and x in login_to_group_stats
+                    else None
+                ),
+                return_dtype=pl.Utf8,
+            )
+            .alias("group_from_stats")
+        )
+
+        # Use group_from_stats if available, otherwise use group_backup
+        accounts_df = accounts_df.with_columns(
+            pl.when(pl.col("group_from_stats").is_not_null())
+            .then(pl.col("group_from_stats"))
+            .otherwise(pl.col("group_backup"))
+            .alias("group")
+        )
+
+        # Count the sources
+        from_stats = accounts_df.filter(pl.col("group_from_stats").is_not_null()).height
+        from_backup = accounts_df.filter(
+            pl.col("group_from_stats").is_null() & pl.col("group_backup").is_not_null()
+        ).height
+        no_group = accounts_df.filter(
+            pl.col("group_from_stats").is_null() & pl.col("group_backup").is_null()
+        ).height
+
+        print(f"  Group from account_stats: {from_stats}")
+        print(f"  Group from mt5_users (backup): {from_backup}")
+        print(f"  No group information: {no_group}")
+
+        # Drop temporary columns
+        accounts_df = accounts_df.drop(["group_backup", "group_from_stats"])
+
+    except FileNotFoundError:
+        print(
+            "\n⚠️  Warning: csv/account_stats.csv not found. Using mt5_users.csv group only."
+        )
+
     # Load account_data.csv for password mapping
     print("\nLoading csv/account_data.csv for password mapping...")
     try:
