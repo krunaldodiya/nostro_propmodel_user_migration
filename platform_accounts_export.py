@@ -51,10 +51,47 @@ def export_platform_accounts(generate=False):
         print(f"  Valid user mappings: {valid_user_mappings}")
         print(f"  Invalid/missing user mappings: {invalid_user_mappings}")
 
+        # Map identity_status to is_kyc
+        print("\nMapping identity_status to is_kyc...")
+        user_id_to_identity_status = dict(
+            zip(original_users_df["id"], original_users_df["identity_status"])
+        )
+
+        # Map identity_status to accounts
+        accounts_df = accounts_df.with_columns(
+            pl.col("user_id")
+            .map_elements(
+                lambda x: (
+                    user_id_to_identity_status.get(x)
+                    if x is not None and x in user_id_to_identity_status
+                    else None
+                ),
+                return_dtype=pl.Utf8,
+            )
+            .alias("identity_status")
+        )
+
+        # Create is_kyc column: 1 if identity_status == "completed", else 0
+        accounts_df = accounts_df.with_columns(
+            pl.when(pl.col("identity_status") == "completed")
+            .then(1)
+            .otherwise(0)
+            .alias("is_kyc")
+        )
+
+        kyc_completed = (accounts_df["is_kyc"] == 1).sum()
+        kyc_not_completed = (accounts_df["is_kyc"] == 0).sum()
+        print(f"  KYC completed (is_kyc=1): {kyc_completed}")
+        print(f"  KYC not completed (is_kyc=0): {kyc_not_completed}")
+
     except FileNotFoundError:
         print("\nWarning: User files not found. Skipping user UUID mapping.")
         print("Please run: uv run main.py --generate --users")
-        accounts_df = accounts_df.with_columns(pl.lit(None).alias("user_uuid"))
+        accounts_df = accounts_df.with_columns(
+            pl.lit(None).alias("user_uuid"),
+            pl.lit(None).alias("identity_status"),
+            pl.lit(0).alias("is_kyc"),
+        )
 
     # Load purchases to create purchase_id-to-purchase_uuid mapping
     print("\nLoading purchase files for purchase mapping...")
@@ -187,6 +224,34 @@ def export_platform_accounts(generate=False):
         else:
             accounts_df = accounts_df.with_columns(
                 pl.lit(0).cast(pl.Int8).alias("status")
+            )
+
+    # Add is_trades_check column (from trades_check: 1 -> 1, 0 -> 0, null -> 0)
+    if "is_trades_check" not in accounts_df.columns:
+        if "trades_check" in accounts_df.columns:
+            accounts_df = accounts_df.with_columns(
+                pl.col("trades_check")
+                .fill_null(0)
+                .cast(pl.Int8)
+                .alias("is_trades_check")
+            )
+        else:
+            accounts_df = accounts_df.with_columns(
+                pl.lit(0).cast(pl.Int8).alias("is_trades_check")
+            )
+
+    # Add is_trade_agreement column (from contract_sign_staus: 1 -> 1, 0 -> 0, null -> 0)
+    if "is_trade_agreement" not in accounts_df.columns:
+        if "contract_sign_staus" in accounts_df.columns:
+            accounts_df = accounts_df.with_columns(
+                pl.col("contract_sign_staus")
+                .fill_null(0)
+                .cast(pl.Int8)
+                .alias("is_trade_agreement")
+            )
+        else:
+            accounts_df = accounts_df.with_columns(
+                pl.lit(0).cast(pl.Int8).alias("is_trade_agreement")
             )
 
     # Rename account_type to account_type_old and create new account_type (0 -> 'standard', 1 -> 'aggressive')
