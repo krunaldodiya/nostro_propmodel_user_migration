@@ -25,7 +25,7 @@ demo\Nostro\U-TAF-1-B
 
 Scenario 1 when funded_at is not null
 
-## Pending funded
+## Pending Funded Phase
 
 group = not part of funded groups
 funded_at = not null
@@ -34,7 +34,7 @@ current_phase = 1
 status = 2
 fund_status = 0
 
-## Approved funded
+## Approved Funded Phase
 
 group = must be part of funded groups
 funded_at = not null
@@ -44,7 +44,7 @@ current_phase = 0
 status = 1
 fund_status = 1
 
-## Rejected funded
+## Rejected Funded Phase
 
 group = not part of funded groups
 funded_at = not null
@@ -54,9 +54,12 @@ current_phase = 1
 status = 0
 fund_status = 2
 
+---
+
 Scenario 2 when funded_at is null
 
-For evolution Phase
+## Evolution Phase
+
 current_phase = 1,2,3 (check above condition to get current phase)
 funded_status = 0
 status = is_active
