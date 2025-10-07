@@ -82,9 +82,73 @@ def export_platform_accounts(generate=False):
         # Drop temporary columns
         accounts_df = accounts_df.drop(["group_backup", "group_from_stats"])
 
+        # Filter out accounts without group information
+        if no_group > 0:
+            print(f"\nRemoving {no_group} accounts without group information...")
+            accounts_df = accounts_df.filter(
+                pl.col("group").is_not_null() & (pl.col("group") != "")
+            )
+            print(f"Remaining accounts after filtering: {len(accounts_df)}")
+
     except FileNotFoundError:
         print(
             "\n⚠️  Warning: csv/account_stats.csv not found. Using mt5_users.csv group only."
+        )
+        # Filter out accounts without group information from mt5_users
+        accounts_without_group = accounts_df.filter(
+            pl.col("group").is_null() | (pl.col("group") == "")
+        ).height
+        if accounts_without_group > 0:
+            print(
+                f"Removing {accounts_without_group} accounts without group information..."
+            )
+            accounts_df = accounts_df.filter(
+                pl.col("group").is_not_null() & (pl.col("group") != "")
+            )
+            print(f"Remaining accounts after filtering: {len(accounts_df)}")
+
+    # Load platform groups to create group name-to-uuid mapping
+    # This MUST happen right after group setup to use the correct group values
+    print("\nLoading platform groups for group UUID mapping...")
+    try:
+        platform_groups_df = pl.read_csv("new_platform_groups.csv")
+        group_name_to_uuid = dict(
+            zip(platform_groups_df["name"], platform_groups_df["uuid"])
+        )
+        print(f"Created group mapping for {len(group_name_to_uuid)} platform groups")
+
+        # Map group to platform_group_uuid using the properly set group column
+        accounts_df = accounts_df.with_columns(
+            pl.col("group")
+            .map_elements(
+                lambda x: (
+                    group_name_to_uuid.get(x)
+                    if x is not None and x in group_name_to_uuid
+                    else None
+                ),
+                return_dtype=pl.Utf8,
+            )
+            .alias("platform_group_uuid")
+        )
+
+        valid_group_mappings = accounts_df.filter(
+            pl.col("platform_group_uuid").is_not_null()
+        ).height
+        invalid_group_mappings = accounts_df.filter(
+            pl.col("platform_group_uuid").is_null()
+        ).height
+        print(f"  Valid platform group UUID mappings: {valid_group_mappings}")
+        print(
+            f"  Invalid/missing platform group UUID mappings: {invalid_group_mappings}"
+        )
+
+    except FileNotFoundError:
+        print(
+            "\n⚠️  Warning: new_platform_groups.csv not found. Skipping platform group UUID mapping."
+        )
+        print("Please run: uv run python filter_platform_groups.py")
+        accounts_df = accounts_df.with_columns(
+            pl.lit(None).alias("platform_group_uuid")
         )
 
     # Load account_data.csv for password mapping
@@ -270,47 +334,6 @@ def export_platform_accounts(generate=False):
         print("\nWarning: Purchase files not found. Skipping purchase UUID mapping.")
         print("Please run: uv run main.py --generate --purchases")
         accounts_df = accounts_df.with_columns(pl.lit(None).alias("purchase_uuid"))
-
-    # Load platform groups to create group name-to-uuid mapping
-    print("\nLoading platform groups for group mapping...")
-    try:
-        platform_groups_df = pl.read_csv("new_platform_groups.csv")
-        group_name_to_uuid = dict(
-            zip(platform_groups_df["name"], platform_groups_df["uuid"])
-        )
-        print(f"Created group mapping for {len(group_name_to_uuid)} platform groups")
-
-        # Map group to platform_group_uuid
-        accounts_df = accounts_df.with_columns(
-            pl.col("group")
-            .map_elements(
-                lambda x: (
-                    group_name_to_uuid.get(x)
-                    if x is not None and x in group_name_to_uuid
-                    else None
-                ),
-                return_dtype=pl.Utf8,
-            )
-            .alias("platform_group_uuid")
-        )
-
-        valid_group_mappings = accounts_df.filter(
-            pl.col("platform_group_uuid").is_not_null()
-        ).height
-        invalid_group_mappings = accounts_df.filter(
-            pl.col("platform_group_uuid").is_null()
-        ).height
-        print(f"  Valid platform group mappings: {valid_group_mappings}")
-        print(f"  Invalid/missing group mappings: {invalid_group_mappings}")
-
-    except FileNotFoundError:
-        print(
-            "\nWarning: new_platform_groups.csv not found. Skipping platform group UUID mapping."
-        )
-        print("Please run: uv run python filter_platform_groups.py")
-        accounts_df = accounts_df.with_columns(
-            pl.lit(None).alias("platform_group_uuid")
-        )
 
     # Add updated_at column (copy from created_at)
     if "updated_at" not in accounts_df.columns:
