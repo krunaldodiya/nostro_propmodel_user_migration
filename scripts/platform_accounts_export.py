@@ -107,49 +107,7 @@ def export_platform_accounts(generate=False):
             )
             print(f"Remaining accounts after filtering: {len(accounts_df)}")
 
-    # Load platform groups to create group name-to-uuid mapping
-    # This MUST happen right after group setup to use the correct group values
-    print("\nLoading platform groups for group UUID mapping...")
-    try:
-        platform_groups_df = pl.read_csv("csv/output/new_platform_groups.csv")
-        group_name_to_uuid = dict(
-            zip(platform_groups_df["name"], platform_groups_df["uuid"])
-        )
-        print(f"Created group mapping for {len(group_name_to_uuid)} platform groups")
-
-        # Map group to platform_group_uuid using the properly set group column
-        accounts_df = accounts_df.with_columns(
-            pl.col("group")
-            .map_elements(
-                lambda x: (
-                    group_name_to_uuid.get(x)
-                    if x is not None and x in group_name_to_uuid
-                    else None
-                ),
-                return_dtype=pl.Utf8,
-            )
-            .alias("platform_group_uuid")
-        )
-
-        valid_group_mappings = accounts_df.filter(
-            pl.col("platform_group_uuid").is_not_null()
-        ).height
-        invalid_group_mappings = accounts_df.filter(
-            pl.col("platform_group_uuid").is_null()
-        ).height
-        print(f"  Valid platform group UUID mappings: {valid_group_mappings}")
-        print(
-            f"  Invalid/missing platform group UUID mappings: {invalid_group_mappings}"
-        )
-
-    except FileNotFoundError:
-        print(
-            "\n⚠️  Warning: csv/output/new_platform_groups.csv not found. Skipping platform group UUID mapping."
-        )
-        print("Please run: uv run python filter_platform_groups.py")
-        accounts_df = accounts_df.with_columns(
-            pl.lit(None).alias("platform_group_uuid")
-        )
+    # Platform group UUID mapping will be done later after all columns are added
 
     # Load account_data.csv for password mapping
     print("\nLoading csv/input/account_data.csv for password mapping...")
@@ -448,6 +406,72 @@ def export_platform_accounts(generate=False):
             accounts_df = accounts_df.with_columns(
                 pl.lit("trial").alias("account_stage")
             )
+
+    # Load platform groups to create combination-based UUID mapping
+    # Map based on: platform_name + account_stage + account_type + initial_balance
+    print("\nLoading platform groups for combination-based UUID mapping...")
+    try:
+        platform_groups_df = pl.read_csv("csv/output/new_platform_groups.csv")
+        print(f"Loaded {len(platform_groups_df)} platform groups")
+
+        # Create a mapping based on the combination of fields
+        # We'll use a join operation to map based on the combination
+        mapping_df = platform_groups_df.select(
+            [
+                "platform_name",
+                "account_stage",
+                "account_type",
+                "initial_balance",
+                "uuid",
+            ]
+        ).rename({"uuid": "platform_group_uuid"})
+
+        # Convert initial_balance to match data types (f64 to i64)
+        mapping_df = mapping_df.with_columns(pl.col("initial_balance").cast(pl.Int64))
+
+        print(f"Created mapping for {len(mapping_df)} platform group combinations")
+        print("Available combinations:")
+        print(
+            mapping_df.select(
+                ["platform_name", "account_stage", "account_type", "initial_balance"]
+            ).unique()
+        )
+
+        # Join accounts with platform groups based on the combination
+        accounts_df = accounts_df.join(
+            mapping_df,
+            on=["platform_name", "account_stage", "account_type", "initial_balance"],
+            how="inner",  # Use INNER JOIN to only keep accounts that match platform groups
+        )
+
+        valid_group_mappings = accounts_df.filter(
+            pl.col("platform_group_uuid").is_not_null()
+        ).height
+        print(
+            f"  Accounts with valid platform group UUID mappings: {valid_group_mappings}"
+        )
+        print(f"  Total accounts after filtering: {len(accounts_df)}")
+
+        # Show which combinations are now included
+        print("\nIncluded combinations:")
+        included_combinations = (
+            accounts_df.select(
+                ["platform_name", "account_stage", "account_type", "initial_balance"]
+            )
+            .unique()
+            .sort(["platform_name", "account_stage", "account_type", "initial_balance"])
+        )
+        print(f"Total included combinations: {len(included_combinations)}")
+        print(included_combinations)
+
+    except FileNotFoundError:
+        print(
+            "\n⚠️  Warning: csv/output/new_platform_groups.csv not found. Skipping platform group UUID mapping."
+        )
+        print("Please run: uv run main.py --generate --platform-groups")
+        accounts_df = accounts_df.with_columns(
+            pl.lit(None).alias("platform_group_uuid")
+        )
 
     # Scenario 2: Evolution Phase - For accounts where funded_at is null
     print("\nApplying Scenario 2: Evolution Phase (funded_at is null)...")
