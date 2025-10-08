@@ -42,6 +42,12 @@ Examples:
   # Generate platform groups export
   uv run main.py --generate --platform-groups
 
+  # Preview account stats export
+  uv run main.py --account-stats
+
+  # Generate account stats export
+  uv run main.py --generate --account-stats
+
   # Generate all exports
   uv run main.py --generate --all
         """,
@@ -75,6 +81,12 @@ Examples:
         help="Export platform groups table",
     )
 
+    parser.add_argument(
+        "--account-stats",
+        action="store_true",
+        help="Export account stats table",
+    )
+
     parser.add_argument("--all", action="store_true", help="Export all tables")
 
     args = parser.parse_args()
@@ -86,6 +98,7 @@ Examples:
         or args.discount_codes
         or args.platform_accounts
         or args.platform_groups
+        or args.account_stats
         or args.all
     ):
         parser.print_help()
@@ -101,6 +114,7 @@ Examples:
             "platform_groups",
             "purchases",
             "platform_accounts",
+            "account_stats",
         ]
     else:
         if args.users:
@@ -113,6 +127,8 @@ Examples:
             exports_to_run.append("purchases")
         if args.platform_accounts:
             exports_to_run.append("platform_accounts")
+        if args.account_stats:
+            exports_to_run.append("account_stats")
 
     # Run exports
     for export_type in exports_to_run:
@@ -141,6 +157,10 @@ Examples:
                 from scripts.platform_accounts_export import export_platform_accounts
 
                 export_platform_accounts(generate=args.generate)
+            elif export_type == "account_stats":
+                from scripts.account_stats_export import export_account_stats
+
+                export_account_stats(generate=args.generate)
         except Exception as e:
             print(f"\n❌ Error during {export_type} export: {e}")
             import traceback
