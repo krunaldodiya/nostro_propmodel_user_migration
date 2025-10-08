@@ -153,7 +153,7 @@ def export_users(generate=False):
 
     # Load column configuration from JSON file
     try:
-        with open("users_column_config.json", "r") as f:
+        with open("config/users_column_config.json", "r") as f:
             config = json.load(f)
 
         # Get columns to include (now it's a simple list)
@@ -188,7 +188,7 @@ def export_users(generate=False):
             print("  uv run main.py --generate --users")
 
     except FileNotFoundError:
-        print("Error: users_column_config.json not found. Using all columns.")
+        print("Error: config/users_column_config.json not found. Using all columns.")
         print(f"\nUsers DataFrame shape: {df.shape}")
         print(f"Columns: {df.columns}")
         print("\nFirst few rows:")
@@ -204,7 +204,7 @@ def export_users(generate=False):
             print("  uv run main.py --generate --users")
 
     except json.JSONDecodeError as e:
-        print(f"Error: Invalid JSON in users_column_config.json: {e}")
+        print(f"Error: Invalid JSON in config/users_column_config.json: {e}")
         print("Using all columns instead.")
 
         if generate:

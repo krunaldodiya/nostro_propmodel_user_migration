@@ -24,11 +24,11 @@ Examples:
   # Generate purchases export
   uv run main.py --generate --purchases
 
-  # Preview discounts export
-  uv run main.py --discounts
+  # Preview discount codes export
+  uv run main.py --discount-codes
 
-  # Generate discounts export
-  uv run main.py --generate --discounts
+  # Generate discount codes export
+  uv run main.py --generate --discount-codes
 
   # Preview platform accounts export
   uv run main.py --platform-accounts
@@ -54,7 +54,7 @@ Examples:
     )
 
     parser.add_argument(
-        "--discounts", action="store_true", help="Export discounts table"
+        "--discount-codes", action="store_true", help="Export discount codes table"
     )
 
     parser.add_argument(
@@ -71,7 +71,7 @@ Examples:
     if not (
         args.users
         or args.purchases
-        or args.discounts
+        or args.discount_codes
         or args.platform_accounts
         or args.all
     ):
@@ -82,14 +82,14 @@ Examples:
     exports_to_run = []
 
     if args.all:
-        exports_to_run = ["users", "purchases", "discounts", "platform_accounts"]
+        exports_to_run = ["users", "purchases", "discount_codes", "platform_accounts"]
     else:
         if args.users:
             exports_to_run.append("users")
         if args.purchases:
             exports_to_run.append("purchases")
-        if args.discounts:
-            exports_to_run.append("discounts")
+        if args.discount_codes:
+            exports_to_run.append("discount_codes")
         if args.platform_accounts:
             exports_to_run.append("platform_accounts")
 
@@ -108,8 +108,8 @@ Examples:
                 from purchases_export import export_purchases
 
                 export_purchases(generate=args.generate)
-            elif export_type == "discounts":
-                from discounts_export import export_discounts
+            elif export_type == "discount_codes":
+                from discount_codes_export import export_discounts
 
                 export_discounts(generate=args.generate)
             elif export_type == "platform_accounts":

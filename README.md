@@ -26,11 +26,11 @@ uv run main.py --purchases
 # Generate purchases export
 uv run main.py --generate --purchases
 
-# Preview discounts export
-uv run main.py --discounts
+# Preview discount codes export
+uv run main.py --discount-codes
 
-# Generate discounts export
-uv run main.py --generate --discounts
+# Generate discount codes export
+uv run main.py --generate --discount-codes
 
 # Generate all exports at once
 uv run main.py --generate --all
@@ -44,9 +44,9 @@ Exports users from `csv/users.csv` to `new_users.csv` with the following transfo
 - Maps old `ref_by_user_id` (INT) to new `ref_by_user_uuid` (UUID)
 - Renames columns (username → email, firstname → first_name, etc.)
 - Adds new columns (role_id, status, updated_at, deleted_at, etc.)
-- Uses `users_column_config.json` to select which columns to export
+- Uses `config/users_column_config.json` to select which columns to export
 
-**Configuration:** Edit `users_column_config.json` to control which columns are exported.
+**Configuration:** Edit `config/users_column_config.json` to control which columns are exported.
 
 ### 2. Purchases Export (`purchases_export.py`)
 
@@ -63,9 +63,9 @@ Exports purchases from `csv/purchases.csv` to `new_purchases.csv` with the follo
   - `ip` (NULL - stores user IP address)
 - Removes MySQL-only columns: `id`, `user_id`, `discount_id`, `discount`, `discount_code`, `deleted_at`
 - Exports only PostgreSQL schema columns (20 total)
-- Uses `purchases_column_config.json` to define the exact PostgreSQL schema
+- Uses `config/purchases_column_config.json` to define the exact PostgreSQL schema
 
-**Configuration:** Edit `purchases_column_config.json` to control which columns are exported.
+**Configuration:** Edit `config/purchases_column_config.json` to control which columns are exported.
 
 **Statistics:**
 
@@ -79,7 +79,7 @@ Exports purchases from `csv/purchases.csv` to `new_purchases.csv` with the follo
 - Removed columns: `id`, `user_id`, `discount_id`, `discount`, `discount_code`, `deleted_at`
 - New columns: `webhook_response`, `purchase_type`, `competition_uuid`, `ip`
 
-### 3. Discounts Export (`discounts_export.py`)
+### 3. Discount Codes Export (`discount_codes_export.py`)
 
 Exports discount codes from `csv/discount_codes.csv` to `new_discount_codes.csv` with the following transformations:
 
@@ -100,9 +100,9 @@ Exports discount codes from `csv/discount_codes.csv` to `new_discount_codes.csv`
   - `deleted_at` (NULL for soft deletes)
 - Removes MySQL-only columns: `id`, `group_name`, `account_balance`
 - Exports only PostgreSQL schema columns (18 total)
-- Uses `discounts_column_config.json` to define the exact PostgreSQL schema
+- Uses `config/discount_codes_column_config.json` to define the exact PostgreSQL schema
 
-**Configuration:** Edit `discounts_column_config.json` to control which columns are exported.
+**Configuration:** Edit `config/discount_codes_column_config.json` to control which columns are exported.
 
 **Statistics:**
 
@@ -119,17 +119,23 @@ Exports discount codes from `csv/discount_codes.csv` to `new_discount_codes.csv`
 
 ## ⚙️ Configuration Files
 
-### `users_column_config.json`
+All column configuration files are located in the `config/` directory:
+
+### `config/users_column_config.json`
 
 Controls which columns are exported in `new_users.csv`. Contains a JSON array of column names to include in the export.
 
-### `purchases_column_config.json`
+### `config/purchases_column_config.json`
 
 Controls which columns are exported in `new_purchases.csv`. Contains a JSON array of the 20 PostgreSQL schema columns in the exact order matching the database schema.
 
-### `discounts_column_config.json`
+### `config/discount_codes_column_config.json`
 
 Controls which columns are exported in `new_discount_codes.csv`. Contains a JSON array of the 18 PostgreSQL schema columns in the exact order matching the database schema.
+
+### `config/platform_accounts_column_config.json`
+
+Controls which columns are exported in `new_platform_accounts.csv`. Contains a JSON array of the 30 PostgreSQL schema columns in the exact order matching the database schema.
 
 ---
 
@@ -140,10 +146,12 @@ user_migration/
 ├── main.py                          # Entry point - dispatches to export modules
 ├── users_export.py                  # Users export logic
 ├── purchases_export.py              # Purchases export logic
-├── discounts_export.py              # Discounts export logic
-├── users_column_config.json         # Users column configuration
-├── purchases_column_config.json     # Purchases column configuration
-├── discounts_column_config.json     # Discounts column configuration
+├── discount_codes_export.py         # Discount codes export logic
+├── config/                          # Configuration files directory
+│   ├── users_column_config.json         # Users column configuration
+│   ├── purchases_column_config.json     # Purchases column configuration
+│   ├── discount_codes_column_config.json     # Discount codes column configuration
+│   └── platform_accounts_column_config.json  # Platform accounts column configuration
 ├── csv/                             # Source files directory
 │   ├── users.csv                    # Original users data (READ-ONLY)
 │   ├── purchases.csv                # Original purchases data

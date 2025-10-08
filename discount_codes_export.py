@@ -100,7 +100,7 @@ def export_discounts(generate=False):
 
     # Load column configuration from JSON file
     try:
-        with open("discounts_column_config.json", "r") as f:
+        with open("config/discount_codes_column_config.json", "r") as f:
             config = json.load(f)
 
         # Get columns to include
@@ -135,10 +135,12 @@ def export_discounts(generate=False):
             print(f"Included columns: {', '.join(available_columns)}")
         else:
             print("\nTo generate new_discount_codes.csv, run with --generate flag:")
-            print("  uv run main.py --generate --discounts")
+            print("  uv run main.py --generate --discount-codes")
 
     except FileNotFoundError:
-        print("Error: discounts_column_config.json not found. Using all columns.")
+        print(
+            "Error: config/discount_codes_column_config.json not found. Using all columns."
+        )
         print(f"\nDiscounts DataFrame shape: {discounts_df.shape}")
         print(f"Columns: {discounts_df.columns}")
         print("\nFirst few rows:")
@@ -151,10 +153,10 @@ def export_discounts(generate=False):
             )
         else:
             print("\nTo generate new_discount_codes.csv, run with --generate flag:")
-            print("  uv run main.py --generate --discounts")
+            print("  uv run main.py --generate --discount-codes")
 
     except json.JSONDecodeError as e:
-        print(f"Error: Invalid JSON in discounts_column_config.json: {e}")
+        print(f"Error: Invalid JSON in config/discount_codes_column_config.json: {e}")
         print("Using all columns instead.")
 
         if generate:

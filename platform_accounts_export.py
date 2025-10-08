@@ -717,7 +717,7 @@ def export_platform_accounts(generate=False):
 
     # Load column configuration from JSON file
     try:
-        with open("platform_accounts_column_config.json", "r") as f:
+        with open("config/platform_accounts_column_config.json", "r") as f:
             config = json.load(f)
 
         # Get columns to include
@@ -761,7 +761,7 @@ def export_platform_accounts(generate=False):
             print("  uv run main.py --generate --platform-accounts")
 
     except FileNotFoundError:
-        print("\n⚠️  platform_accounts_column_config.json not found!")
+        print("\n⚠️  config/platform_accounts_column_config.json not found!")
         print("Exporting all columns...")
 
         print(
@@ -782,7 +782,7 @@ def export_platform_accounts(generate=False):
             print("  uv run main.py --generate --platform-accounts")
 
     except json.JSONDecodeError as e:
-        print(f"\n❌ Error parsing platform_accounts_column_config.json: {e}")
+        print(f"\n❌ Error parsing config/platform_accounts_column_config.json: {e}")
         print("Please check the JSON syntax.")
         accounts_df.write_csv("new_platform_accounts.csv")
         print(

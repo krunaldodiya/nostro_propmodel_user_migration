@@ -97,7 +97,7 @@ def export_purchases(generate=False):
         print(
             "\nWarning: new_discount_codes.csv not found. Skipping discount UUID mapping."
         )
-        print("Please run: uv run main.py --generate --discounts")
+        print("Please run: uv run main.py --generate --discount-codes")
         # Add discount_uuid column with null values
         purchases_df = purchases_df.with_columns(pl.lit(None).alias("discount_uuid"))
 
@@ -124,7 +124,7 @@ def export_purchases(generate=False):
 
     # Load column configuration from JSON file
     try:
-        with open("purchases_column_config.json", "r") as f:
+        with open("config/purchases_column_config.json", "r") as f:
             config = json.load(f)
 
         # Get columns to include
@@ -162,7 +162,9 @@ def export_purchases(generate=False):
             print("  uv run main.py --generate --purchases")
 
     except FileNotFoundError:
-        print("Error: purchases_column_config.json not found. Using all columns.")
+        print(
+            "Error: config/purchases_column_config.json not found. Using all columns."
+        )
         print(f"\nPurchases DataFrame shape: {purchases_df.shape}")
         print(f"Columns: {purchases_df.columns}")
         print("\nFirst few rows:")
@@ -178,7 +180,7 @@ def export_purchases(generate=False):
             print("  uv run main.py --generate --purchases")
 
     except json.JSONDecodeError as e:
-        print(f"Error: Invalid JSON in purchases_column_config.json: {e}")
+        print(f"Error: Invalid JSON in config/purchases_column_config.json: {e}")
         print("Using all columns instead.")
 
         if generate:
