@@ -93,10 +93,40 @@ def export_discounts(generate=False):
     # Add type column with default value 'admin'
     discounts_df = discounts_df.with_columns(pl.lit("admin").alias("type"))
 
-    # Add created_by column with specific UUID
-    discounts_df = discounts_df.with_columns(
-        pl.lit("f965141e-43f0-4992-a742-7899edbe1ca5").alias("created_by")
-    )
+    # Add created_by column by mapping scott@nostro.co to their UUID
+    print("\nLoading user files for created_by mapping...")
+    try:
+        original_users_df = pl.read_csv("csv/users.csv")
+        new_users_df = pl.read_csv("new_users.csv", infer_schema_length=100000)
+
+        # Find Scott's user ID from original users
+        scott_user = original_users_df.filter(pl.col("username") == "scott@nostro.co")
+
+        if len(scott_user) > 0:
+            scott_id = scott_user["id"][0]
+            print(f"Found scott@nostro.co with user ID: {scott_id}")
+
+            # Create mapping from id to uuid
+            id_to_uuid = dict(zip(original_users_df["id"], new_users_df["uuid"]))
+            scott_uuid = id_to_uuid.get(scott_id)
+
+            if scott_uuid:
+                print(f"Mapped to UUID: {scott_uuid}")
+                discounts_df = discounts_df.with_columns(
+                    pl.lit(scott_uuid).alias("created_by")
+                )
+            else:
+                print("Warning: Could not map scott@nostro.co to UUID. Using NULL.")
+                discounts_df = discounts_df.with_columns(
+                    pl.lit(None).alias("created_by")
+                )
+        else:
+            print("Warning: scott@nostro.co not found in users.csv. Using NULL.")
+            discounts_df = discounts_df.with_columns(pl.lit(None).alias("created_by"))
+    except FileNotFoundError:
+        print("Warning: User files not found. Setting created_by to NULL.")
+        print("Please run: uv run main.py --generate --users")
+        discounts_df = discounts_df.with_columns(pl.lit(None).alias("created_by"))
 
     # Load column configuration from JSON file
     try:
