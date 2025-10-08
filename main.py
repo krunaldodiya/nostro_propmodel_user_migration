@@ -36,6 +36,12 @@ Examples:
   # Generate platform accounts export
   uv run main.py --generate --platform-accounts
 
+  # Preview platform groups export
+  uv run main.py --platform-groups
+
+  # Generate platform groups export
+  uv run main.py --generate --platform-groups
+
   # Generate all exports
   uv run main.py --generate --all
         """,
@@ -63,6 +69,12 @@ Examples:
         help="Export platform accounts table",
     )
 
+    parser.add_argument(
+        "--platform-groups",
+        action="store_true",
+        help="Export platform groups table",
+    )
+
     parser.add_argument("--all", action="store_true", help="Export all tables")
 
     args = parser.parse_args()
@@ -73,6 +85,7 @@ Examples:
         or args.purchases
         or args.discount_codes
         or args.platform_accounts
+        or args.platform_groups
         or args.all
     ):
         parser.print_help()
@@ -82,14 +95,22 @@ Examples:
     exports_to_run = []
 
     if args.all:
-        exports_to_run = ["users", "purchases", "discount_codes", "platform_accounts"]
+        exports_to_run = [
+            "users",
+            "discount_codes",
+            "platform_groups",
+            "purchases",
+            "platform_accounts",
+        ]
     else:
         if args.users:
             exports_to_run.append("users")
-        if args.purchases:
-            exports_to_run.append("purchases")
         if args.discount_codes:
             exports_to_run.append("discount_codes")
+        if args.platform_groups:
+            exports_to_run.append("platform_groups")
+        if args.purchases:
+            exports_to_run.append("purchases")
         if args.platform_accounts:
             exports_to_run.append("platform_accounts")
 
@@ -112,6 +133,10 @@ Examples:
                 from discount_codes_export import export_discounts
 
                 export_discounts(generate=args.generate)
+            elif export_type == "platform_groups":
+                from platform_groups_export import export_platform_groups
+
+                export_platform_groups(generate=args.generate)
             elif export_type == "platform_accounts":
                 from platform_accounts_export import export_platform_accounts
 
