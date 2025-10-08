@@ -10,9 +10,9 @@ def export_discounts(generate=False):
     Args:
         generate (bool): If True, generates new_discount_codes.csv file. If False, only previews.
     """
-    print("Loading csv/discount_codes.csv...")
+    print("Loading csv/input/discount_codes.csv...")
     # Load the CSV file
-    discounts_df = pl.read_csv("csv/discount_codes.csv")
+    discounts_df = pl.read_csv("csv/input/discount_codes.csv")
     print(f"Loaded {len(discounts_df)} discount codes")
 
     # Add uuid column with random UUIDs (insert right after id)
@@ -96,8 +96,10 @@ def export_discounts(generate=False):
     # Add created_by column by mapping scott@nostro.co to their UUID
     print("\nLoading user files for created_by mapping...")
     try:
-        original_users_df = pl.read_csv("csv/users.csv")
-        new_users_df = pl.read_csv("new_users.csv", infer_schema_length=100000)
+        original_users_df = pl.read_csv("csv/input/users.csv")
+        new_users_df = pl.read_csv(
+            "csv/output/new_users.csv", infer_schema_length=100000
+        )
 
         # Find Scott's user ID from original users
         scott_user = original_users_df.filter(pl.col("username") == "scott@nostro.co")
@@ -156,15 +158,17 @@ def export_discounts(generate=False):
         print("\nFirst few rows:")
         print(discounts_df_filtered.head())
 
-        # Save the processed data to new_discount_codes.csv only if generate flag is True
+        # Save the processed data to csv/output/new_discount_codes.csv only if generate flag is True
         if generate:
-            discounts_df_filtered.write_csv("new_discount_codes.csv")
+            discounts_df_filtered.write_csv("csv/output/new_discount_codes.csv")
             print(
-                f"\nSuccessfully generated new_discount_codes.csv with {len(discounts_df_filtered)} rows and {len(discounts_df_filtered.columns)} columns"
+                f"\nSuccessfully generated csv/output/new_discount_codes.csv with {len(discounts_df_filtered)} rows and {len(discounts_df_filtered.columns)} columns"
             )
             print(f"Included columns: {', '.join(available_columns)}")
         else:
-            print("\nTo generate new_discount_codes.csv, run with --generate flag:")
+            print(
+                "\nTo generate csv/output/new_discount_codes.csv, run with --generate flag:"
+            )
             print("  uv run main.py --generate --discount-codes")
 
     except FileNotFoundError:

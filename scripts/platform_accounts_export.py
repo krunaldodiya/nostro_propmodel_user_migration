@@ -12,15 +12,15 @@ def export_platform_accounts(generate=False):
     """
 
     # Load the platform accounts CSV file
-    print("Loading csv/mt5_users.csv...")
-    accounts_df = pl.read_csv("csv/mt5_users.csv", infer_schema_length=100000)
+    print("Loading csv/input/mt5_users.csv...")
+    accounts_df = pl.read_csv("csv/input/mt5_users.csv", infer_schema_length=100000)
     print(f"Loaded {len(accounts_df)} platform accounts")
 
     # Load account_stats.csv for group mapping (primary source)
-    print("\nLoading csv/account_stats.csv for group mapping...")
+    print("\nLoading csv/input/account_stats.csv for group mapping...")
     try:
         account_stats_df = pl.read_csv(
-            "csv/account_stats.csv", infer_schema_length=100000
+            "csv/input/account_stats.csv", infer_schema_length=100000
         )
         print(f"Loaded {len(account_stats_df)} account stats records")
 
@@ -92,7 +92,7 @@ def export_platform_accounts(generate=False):
 
     except FileNotFoundError:
         print(
-            "\n⚠️  Warning: csv/account_stats.csv not found. Using mt5_users.csv group only."
+            "\n⚠️  Warning: csv/input/account_stats.csv not found. Using mt5_users.csv group only."
         )
         # Filter out accounts without group information from mt5_users
         accounts_without_group = accounts_df.filter(
@@ -111,7 +111,7 @@ def export_platform_accounts(generate=False):
     # This MUST happen right after group setup to use the correct group values
     print("\nLoading platform groups for group UUID mapping...")
     try:
-        platform_groups_df = pl.read_csv("new_platform_groups.csv")
+        platform_groups_df = pl.read_csv("csv/output/new_platform_groups.csv")
         group_name_to_uuid = dict(
             zip(platform_groups_df["name"], platform_groups_df["uuid"])
         )
@@ -144,7 +144,7 @@ def export_platform_accounts(generate=False):
 
     except FileNotFoundError:
         print(
-            "\n⚠️  Warning: new_platform_groups.csv not found. Skipping platform group UUID mapping."
+            "\n⚠️  Warning: csv/output/new_platform_groups.csv not found. Skipping platform group UUID mapping."
         )
         print("Please run: uv run python filter_platform_groups.py")
         accounts_df = accounts_df.with_columns(
@@ -152,10 +152,10 @@ def export_platform_accounts(generate=False):
         )
 
     # Load account_data.csv for password mapping
-    print("\nLoading csv/account_data.csv for password mapping...")
+    print("\nLoading csv/input/account_data.csv for password mapping...")
     try:
         account_data_df = pl.read_csv(
-            "csv/account_data.csv", infer_schema_length=100000
+            "csv/input/account_data.csv", infer_schema_length=100000
         )
         print(f"Loaded {len(account_data_df)} account data records")
 
@@ -212,7 +212,7 @@ def export_platform_accounts(generate=False):
 
     except FileNotFoundError:
         print(
-            "\n⚠️  Warning: csv/account_data.csv not found. Skipping password mapping."
+            "\n⚠️  Warning: csv/input/account_data.csv not found. Skipping password mapping."
         )
         accounts_df = accounts_df.with_columns(
             pl.lit(None).alias("main_password"), pl.lit(None).alias("investor_password")
@@ -227,8 +227,10 @@ def export_platform_accounts(generate=False):
     # Load the original users.csv and new_users.csv to create user_id-to-user_uuid mapping
     print("Loading user files for user mapping...")
     try:
-        original_users_df = pl.read_csv("csv/users.csv")
-        new_users_df = pl.read_csv("new_users.csv", infer_schema_length=100000)
+        original_users_df = pl.read_csv("csv/input/users.csv")
+        new_users_df = pl.read_csv(
+            "csv/output/new_users.csv", infer_schema_length=100000
+        )
         user_id_to_uuid = dict(zip(original_users_df["id"], new_users_df["uuid"]))
         print(f"Created user mapping for {len(user_id_to_uuid)} users")
 
@@ -299,11 +301,13 @@ def export_platform_accounts(generate=False):
     print("\nLoading purchase files for purchase mapping...")
     try:
         original_purchases_df = pl.read_csv(
-            "csv/purchases.csv",
+            "csv/input/purchases.csv",
             infer_schema_length=100000,
             schema_overrides={"discount": pl.Float64},
         )
-        new_purchases_df = pl.read_csv("new_purchases.csv", infer_schema_length=100000)
+        new_purchases_df = pl.read_csv(
+            "csv/output/new_purchases.csv", infer_schema_length=100000
+        )
         purchase_id_to_uuid = dict(
             zip(original_purchases_df["id"], new_purchases_df["uuid"])
         )
@@ -751,15 +755,17 @@ def export_platform_accounts(generate=False):
         print(f"\nFirst few rows:")
         print(accounts_df_filtered.head())
 
-        # Save the processed data to new_platform_accounts.csv only if generate flag is True
+        # Save the processed data to csv/output/new_platform_accounts.csv only if generate flag is True
         if generate:
-            accounts_df_filtered.write_csv("new_platform_accounts.csv")
+            accounts_df_filtered.write_csv("csv/output/new_platform_accounts.csv")
             print(
-                f"\nSuccessfully generated new_platform_accounts.csv with {len(accounts_df_filtered)} rows and {len(accounts_df_filtered.columns)} columns"
+                f"\nSuccessfully generated csv/output/new_platform_accounts.csv with {len(accounts_df_filtered)} rows and {len(accounts_df_filtered.columns)} columns"
             )
             print(f"Included columns: {', '.join(existing_columns)}")
         else:
-            print("\nTo generate new_platform_accounts.csv, run with --generate flag:")
+            print(
+                "\nTo generate csv/output/new_platform_accounts.csv, run with --generate flag:"
+            )
             print("  uv run main.py --generate --platform-accounts")
 
     except FileNotFoundError:
@@ -775,18 +781,20 @@ def export_platform_accounts(generate=False):
         print(accounts_df.head())
 
         if generate:
-            accounts_df.write_csv("new_platform_accounts.csv")
+            accounts_df.write_csv("csv/output/new_platform_accounts.csv")
             print(
-                f"\nSuccessfully generated new_platform_accounts.csv with {len(accounts_df)} rows and {len(accounts_df.columns)} columns"
+                f"\nSuccessfully generated csv/output/new_platform_accounts.csv with {len(accounts_df)} rows and {len(accounts_df.columns)} columns"
             )
         else:
-            print("\nTo generate new_platform_accounts.csv, run with --generate flag:")
+            print(
+                "\nTo generate csv/output/new_platform_accounts.csv, run with --generate flag:"
+            )
             print("  uv run main.py --generate --platform-accounts")
 
     except json.JSONDecodeError as e:
         print(f"\n❌ Error parsing config/platform_accounts_column_config.json: {e}")
         print("Please check the JSON syntax.")
-        accounts_df.write_csv("new_platform_accounts.csv")
+        accounts_df.write_csv("csv/output/new_platform_accounts.csv")
         print(
-            f"\nSuccessfully generated new_platform_accounts.csv with {len(accounts_df)} rows and {len(accounts_df.columns)} columns"
+            f"\nSuccessfully generated csv/output/new_platform_accounts.csv with {len(accounts_df)} rows and {len(accounts_df.columns)} columns"
         )

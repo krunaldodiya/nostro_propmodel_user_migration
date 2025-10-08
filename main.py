@@ -122,23 +122,23 @@ Examples:
 
         try:
             if export_type == "users":
-                from users_export import export_users
+                from scripts.users_export import export_users
 
                 export_users(generate=args.generate)
             elif export_type == "purchases":
-                from purchases_export import export_purchases
+                from scripts.purchases_export import export_purchases
 
                 export_purchases(generate=args.generate)
             elif export_type == "discount_codes":
-                from discount_codes_export import export_discounts
+                from scripts.discount_codes_export import export_discounts
 
                 export_discounts(generate=args.generate)
             elif export_type == "platform_groups":
-                from platform_groups_export import export_platform_groups
+                from scripts.platform_groups_export import export_platform_groups
 
                 export_platform_groups(generate=args.generate)
             elif export_type == "platform_accounts":
-                from platform_accounts_export import export_platform_accounts
+                from scripts.platform_accounts_export import export_platform_accounts
 
                 export_platform_accounts(generate=args.generate)
         except Exception as e:

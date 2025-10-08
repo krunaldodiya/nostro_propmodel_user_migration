@@ -12,11 +12,11 @@ def export_purchases(generate=False):
     """
 
     # Load the purchases CSV file
-    print("Loading csv/purchases.csv...")
+    print("Loading csv/input/purchases.csv...")
     # Use infer_schema_length to properly detect column types
     # Override discount column to Float64 to handle decimal values like 99.9
     purchases_df = pl.read_csv(
-        "csv/purchases.csv",
+        "csv/input/purchases.csv",
         infer_schema_length=100000,
         schema_overrides={"discount": pl.Float64},
     )
@@ -24,8 +24,8 @@ def export_purchases(generate=False):
 
     # Load the original users.csv and new_users.csv to create id-to-uuid mapping
     print("Loading user files for user mapping...")
-    original_users_df = pl.read_csv("csv/users.csv")
-    new_users_df = pl.read_csv("new_users.csv", infer_schema_length=100000)
+    original_users_df = pl.read_csv("csv/input/users.csv")
+    new_users_df = pl.read_csv("csv/output/new_users.csv", infer_schema_length=100000)
     print(
         f"Loaded {len(original_users_df)} original users and {len(new_users_df)} new users"
     )
@@ -60,10 +60,10 @@ def export_purchases(generate=False):
     try:
         print("\nLoading discount files for discount mapping...")
         original_discounts_df = pl.read_csv(
-            "csv/discount_codes.csv", infer_schema_length=100000
+            "csv/input/discount_codes.csv", infer_schema_length=100000
         )
         new_discounts_df = pl.read_csv(
-            "new_discount_codes.csv", infer_schema_length=100000
+            "csv/output/new_discount_codes.csv", infer_schema_length=100000
         )
         print(f"Loaded {len(original_discounts_df)} discount codes")
 
@@ -100,7 +100,7 @@ def export_purchases(generate=False):
 
     except FileNotFoundError:
         print(
-            "\nWarning: new_discount_codes.csv not found. Skipping discount UUID mapping."
+            "\nWarning: csv/output/new_discount_codes.csv not found. Skipping discount UUID mapping."
         )
         print("Please run: uv run main.py --generate --discount-codes")
         # Add discount_uuid column with null values
@@ -155,15 +155,15 @@ def export_purchases(generate=False):
         print("\nFirst few rows:")
         print(purchases_df_filtered.head())
 
-        # Save the processed data to new_purchases.csv only if generate flag is True
+        # Save the processed data to csv/output/new_purchases.csv only if generate flag is True
         if generate:
-            purchases_df_filtered.write_csv("new_purchases.csv")
+            purchases_df_filtered.write_csv("csv/output/new_purchases.csv")
             print(
-                f"\nSuccessfully generated new_purchases.csv with {len(purchases_df_filtered)} rows and {len(purchases_df_filtered.columns)} columns"
+                f"\nSuccessfully generated csv/output/new_purchases.csv with {len(purchases_df_filtered)} rows and {len(purchases_df_filtered.columns)} columns"
             )
             print(f"Included columns: {', '.join(available_columns)}")
         else:
-            print("\nTo generate new_purchases.csv, run with --generate flag:")
+            print("\nTo generate csv/output/new_purchases.csv, run with --generate flag:")
             print("  uv run main.py --generate --purchases")
 
     except FileNotFoundError:

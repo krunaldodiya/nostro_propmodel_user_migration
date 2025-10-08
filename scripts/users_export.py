@@ -15,9 +15,9 @@ def export_users(generate=False):
     user_role_id = "7d240ffe-f3f3-4015-9aa7-18a3acc854f7"
     admin_role_id = "4498cf39-7fe2-4059-9571-6e65632eb283"
 
-    print("Loading csv/users.csv...")
+    print("Loading csv/input/users.csv...")
     # Load the CSV file
-    df = pl.read_csv("csv/users.csv")
+    df = pl.read_csv("csv/input/users.csv")
     print(f"Loaded {len(df)} users")
 
     # Add uuid column with random UUIDs
@@ -168,16 +168,16 @@ def export_users(generate=False):
         print("\nFirst few rows:")
         print(df_filtered.head())
 
-        # Save the processed data to new_users.csv only if generate flag is True
+        # Save the processed data to csv/output/new_users.csv only if generate flag is True
         if generate:
-            df_filtered.write_csv("new_users.csv")
+            df_filtered.write_csv("csv/output/new_users.csv")
 
             print(
-                f"\nSuccessfully generated new_users.csv with {len(df_filtered)} rows and {len(df_filtered.columns)} columns"
+                f"\nSuccessfully generated csv/output/new_users.csv with {len(df_filtered)} rows and {len(df_filtered.columns)} columns"
             )
             print(f"Included columns: {', '.join(available_columns)}")
         else:
-            print("\nTo generate new_users.csv, run with --generate flag:")
+            print("\nTo generate csv/output/new_users.csv, run with --generate flag:")
             print("  uv run main.py --generate --users")
 
     except FileNotFoundError:
@@ -188,12 +188,12 @@ def export_users(generate=False):
         print(df.head())
 
         if generate:
-            df.write_csv("new_users.csv")
+            df.write_csv("csv/output/new_users.csv")
             print(
-                f"\nSuccessfully generated new_users.csv with {len(df)} rows and {len(df.columns)} columns"
+                f"\nSuccessfully generated csv/output/new_users.csv with {len(df)} rows and {len(df.columns)} columns"
             )
         else:
-            print("\nTo generate new_users.csv, run with --generate flag:")
+            print("\nTo generate csv/output/new_users.csv, run with --generate flag:")
             print("  uv run main.py --generate --users")
 
     except json.JSONDecodeError as e:
@@ -201,7 +201,7 @@ def export_users(generate=False):
         print("Using all columns instead.")
 
         if generate:
-            df.write_csv("new_users.csv")
+            df.write_csv("csv/output/new_users.csv")
             print(
-                f"\nSuccessfully generated new_users.csv with {len(df)} rows and {len(df.columns)} columns"
+                f"\nSuccessfully generated csv/output/new_users.csv with {len(df)} rows and {len(df.columns)} columns"
             )

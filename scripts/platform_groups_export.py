@@ -45,8 +45,8 @@ def export_platform_groups(generate=False):
         "demo\\Nostro\\U-TAF-1-A",
     ]
 
-    print("Loading csv/platform_groups.csv...")
-    groups_df = pl.read_csv("csv/platform_groups.csv")
+    print("Loading csv/input/platform_groups.csv...")
+    groups_df = pl.read_csv("csv/input/platform_groups.csv")
     print(f"Loaded {len(groups_df)} platform groups")
 
     # Show unique group names that start with 'demo\'
@@ -118,12 +118,14 @@ def export_platform_groups(generate=False):
     print("\nFirst few rows:")
     print(filtered_df.head())
 
-    # Save the processed data to new_platform_groups.csv only if generate flag is True
+    # Save the processed data to csv/output/new_platform_groups.csv only if generate flag is True
     if generate:
-        filtered_df.write_csv("new_platform_groups.csv")
+        filtered_df.write_csv("csv/output/new_platform_groups.csv")
         print(
-            f"\nSuccessfully generated new_platform_groups.csv with {len(filtered_df)} rows and {len(filtered_df.columns)} columns"
+            f"\nSuccessfully generated csv/output/new_platform_groups.csv with {len(filtered_df)} rows and {len(filtered_df.columns)} columns"
         )
     else:
-        print("\nTo generate new_platform_groups.csv, run with --generate flag:")
+        print(
+            "\nTo generate csv/output/new_platform_groups.csv, run with --generate flag:"
+        )
         print("  uv run main.py --generate --platform-groups")
