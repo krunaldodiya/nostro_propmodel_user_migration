@@ -48,6 +48,12 @@ Examples:
   # Generate account stats export
   uv run main.py --generate --account-stats
 
+  # Preview payout requests export
+  uv run main.py --payout-requests
+
+  # Generate payout requests export
+  uv run main.py --generate --payout-requests
+
   # Generate all exports
   uv run main.py --generate --all
         """,
@@ -87,6 +93,12 @@ Examples:
         help="Export account stats table",
     )
 
+    parser.add_argument(
+        "--payout-requests",
+        action="store_true",
+        help="Export payout requests table",
+    )
+
     parser.add_argument("--all", action="store_true", help="Export all tables")
 
     args = parser.parse_args()
@@ -99,6 +111,7 @@ Examples:
         or args.platform_accounts
         or args.platform_groups
         or args.account_stats
+        or args.payout_requests
         or args.all
     ):
         parser.print_help()
@@ -115,6 +128,7 @@ Examples:
             "purchases",
             "platform_accounts",
             "account_stats",
+            "payout_requests",
         ]
     else:
         if args.users:
@@ -129,6 +143,8 @@ Examples:
             exports_to_run.append("platform_accounts")
         if args.account_stats:
             exports_to_run.append("account_stats")
+        if args.payout_requests:
+            exports_to_run.append("payout_requests")
 
     # Run exports
     for export_type in exports_to_run:
@@ -161,6 +177,10 @@ Examples:
                 from scripts.account_stats_export import export_account_stats
 
                 export_account_stats(generate=args.generate)
+            elif export_type == "payout_requests":
+                from scripts.payout_requests_export import export_payout_requests
+
+                export_payout_requests(generate=args.generate)
         except Exception as e:
             print(f"\n❌ Error during {export_type} export: {e}")
             import traceback
