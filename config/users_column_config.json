@@ -1,6 +1,6 @@
 [
   "uuid",
-  "ref_by_user_uuid",
+  "ref_by_user_id",
   "ref_link_count",
   "email",
   "password",

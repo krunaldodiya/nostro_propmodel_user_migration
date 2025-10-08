@@ -31,23 +31,16 @@ def export_users(generate=False):
         .alias("role_id")
     )
 
-    # Create ref_by_user_uuid column by mapping ref_by_user_id to uuid
+    # Rename old ref_by_user_id (integer) to ref_by_user_id_old
+    df = df.rename({"ref_by_user_id": "ref_by_user_id_old"})
+
+    # Create ref_by_user_id (UUID) column by mapping ref_by_user_id_old to uuid
     # Create a mapping from id to uuid
     id_to_uuid = dict(zip(df["id"], df["uuid"]))
 
-    # Map ref_by_user_id to ref_by_user_uuid - only include valid UUIDs
+    # Map ref_by_user_id_old to ref_by_user_id (UUID) - only include valid UUIDs
     df = df.with_columns(
-        pl.col("ref_by_user_id")
-        .map_elements(
-            lambda x: id_to_uuid.get(x) if x is not None and x in id_to_uuid else None,
-            return_dtype=pl.Utf8,
-        )
-        .alias("ref_by_user_uuid")
-    )
-
-    # Fix ref_by_user_id column to use NULL instead of empty strings
-    df = df.with_columns(
-        pl.col("ref_by_user_id")
+        pl.col("ref_by_user_id_old")
         .map_elements(
             lambda x: id_to_uuid.get(x) if x is not None and x in id_to_uuid else None,
             return_dtype=pl.Utf8,
