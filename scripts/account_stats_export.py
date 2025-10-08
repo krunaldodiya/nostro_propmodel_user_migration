@@ -142,9 +142,10 @@ def export_account_stats(generate: bool = False):
     account_stats_df = account_stats_df.drop(fields_to_remove)
     print(f"Removed fields: {fields_to_remove}")
 
-    # Reorder columns to match PostgreSQL schema order
+    # Reorder columns to match PostgreSQL schema order (uuid first)
     print("Reordering columns to match PostgreSQL schema...")
     postgresql_column_order = [
+        "uuid",  # Primary key first
         "status",
         "current_equity",
         "yesterday_equity",
@@ -172,7 +173,6 @@ def export_account_stats(generate: bool = False):
         "current_profit",
         "platform_group_uuid",
         "platform_account_uuid",
-        "uuid",
         "trading_days_count",
         "first_trade_date",
         "total_trade_count",
