@@ -14,7 +14,12 @@ def export_purchases(generate=False):
     # Load the purchases CSV file
     print("Loading csv/purchases.csv...")
     # Use infer_schema_length to properly detect column types
-    purchases_df = pl.read_csv("csv/purchases.csv", infer_schema_length=100000)
+    # Override discount column to Float64 to handle decimal values like 99.9
+    purchases_df = pl.read_csv(
+        "csv/purchases.csv",
+        infer_schema_length=100000,
+        schema_overrides={"discount": pl.Float64},
+    )
     print(f"Loaded {len(purchases_df)} purchases")
 
     # Load the original users.csv and new_users.csv to create id-to-uuid mapping

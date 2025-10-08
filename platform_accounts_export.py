@@ -299,7 +299,9 @@ def export_platform_accounts(generate=False):
     print("\nLoading purchase files for purchase mapping...")
     try:
         original_purchases_df = pl.read_csv(
-            "csv/purchases.csv", infer_schema_length=100000
+            "csv/purchases.csv",
+            infer_schema_length=100000,
+            schema_overrides={"discount": pl.Float64},
         )
         new_purchases_df = pl.read_csv("new_purchases.csv", infer_schema_length=100000)
         purchase_id_to_uuid = dict(
