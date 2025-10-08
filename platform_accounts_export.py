@@ -376,7 +376,7 @@ def export_platform_accounts(generate=False):
         else:
             accounts_df = accounts_df.with_columns(pl.lit(None).alias("profit_target"))
 
-    # Note: status, current_phase, and fund_status will be set based on funded_status_validation.md logic
+    # Note: status, current_phase, and funded_status will be set based on funded_status_validation.md logic
 
     # Add is_trades_check column (from trades_check: 1 -> 1, 0 -> 0, null -> 0)
     if "is_trades_check" not in accounts_df.columns:
@@ -464,13 +464,13 @@ def export_platform_accounts(generate=False):
         .alias("current_phase")
     )
 
-    # Step 2: Set fund_status = 0 for Evolution Phase (funded_at is null)
+    # Step 2: Set funded_status = 0 for Evolution Phase (funded_at is null)
     accounts_df = accounts_df.with_columns(
         pl.when(pl.col("funded_at").is_null())
-        .then(pl.lit(0))  # Evolution Phase: fund_status = 0
+        .then(pl.lit(0))  # Evolution Phase: funded_status = 0
         .otherwise(pl.lit(None))  # Will be set in Scenario 1 later
         .cast(pl.Int8)
-        .alias("fund_status")
+        .alias("funded_status")
     )
 
     # Step 3: Set status = is_active for Evolution Phase (funded_at is null)
@@ -545,7 +545,7 @@ def export_platform_accounts(generate=False):
 
     # Scenario 1.1: Pending Funded Phase
     # Conditions: funded_at is not null AND group is NOT in funded groups
-    # Set: current_phase = 1, status = 2, fund_status = 0
+    # Set: current_phase = 1, status = 2, funded_status = 0
     print("\n  Applying Pending Funded Phase logic...")
 
     accounts_df = accounts_df.with_columns(
@@ -569,13 +569,13 @@ def export_platform_accounts(generate=False):
     )
 
     accounts_df = accounts_df.with_columns(
-        # Update fund_status for Pending Funded Phase
+        # Update funded_status for Pending Funded Phase
         pl.when(
             pl.col("funded_at").is_not_null() & ~pl.col("group").is_in(funded_groups)
         )
-        .then(pl.lit(0))  # Pending Funded Phase: fund_status = 0
-        .otherwise(pl.col("fund_status"))  # Keep existing value from Scenario 2
-        .alias("fund_status")
+        .then(pl.lit(0))  # Pending Funded Phase: funded_status = 0
+        .otherwise(pl.col("funded_status"))  # Keep existing value from Scenario 2
+        .alias("funded_status")
     )
 
     # Count Pending Funded Phase accounts
@@ -587,11 +587,11 @@ def export_platform_accounts(generate=False):
     if pending_funded_accounts > 0:
         print(f"      current_phase = 1")
         print(f"      status = 2 (pending)")
-        print(f"      fund_status = 0")
+        print(f"      funded_status = 0")
 
     # Scenario 1.2: Approved Funded Phase
     # Conditions: funded_at is not null AND group IS in funded groups AND is_active = 1
-    # Set: current_phase = 0, status = 1, fund_status = 1
+    # Set: current_phase = 0, status = 1, funded_status = 1
     print("\n  Applying Approved Funded Phase logic...")
 
     accounts_df = accounts_df.with_columns(
@@ -619,15 +619,15 @@ def export_platform_accounts(generate=False):
     )
 
     accounts_df = accounts_df.with_columns(
-        # Update fund_status for Approved Funded Phase
+        # Update funded_status for Approved Funded Phase
         pl.when(
             pl.col("funded_at").is_not_null()
             & pl.col("group").is_in(funded_groups)
             & (pl.col("is_active") == 1)
         )
-        .then(pl.lit(1))  # Approved Funded Phase: fund_status = 1
-        .otherwise(pl.col("fund_status"))  # Keep existing value
-        .alias("fund_status")
+        .then(pl.lit(1))  # Approved Funded Phase: funded_status = 1
+        .otherwise(pl.col("funded_status"))  # Keep existing value
+        .alias("funded_status")
     )
 
     # Count Approved Funded Phase accounts
@@ -641,11 +641,11 @@ def export_platform_accounts(generate=False):
     if approved_funded_accounts > 0:
         print(f"      current_phase = 0")
         print(f"      status = 1 (active)")
-        print(f"      fund_status = 1 (approved)")
+        print(f"      funded_status = 1 (approved)")
 
     # Scenario 1.3: Rejected Funded Phase
     # Conditions: funded_at is not null AND group is NOT in funded groups AND is_active = 0
-    # Set: current_phase = 1, status = 0, fund_status = 2
+    # Set: current_phase = 1, status = 0, funded_status = 2
     print("\n  Applying Rejected Funded Phase logic...")
 
     accounts_df = accounts_df.with_columns(
@@ -673,15 +673,15 @@ def export_platform_accounts(generate=False):
     )
 
     accounts_df = accounts_df.with_columns(
-        # Update fund_status for Rejected Funded Phase
+        # Update funded_status for Rejected Funded Phase
         pl.when(
             pl.col("funded_at").is_not_null()
             & ~pl.col("group").is_in(funded_groups)
             & (pl.col("is_active") == 0)
         )
-        .then(pl.lit(2))  # Rejected Funded Phase: fund_status = 2
-        .otherwise(pl.col("fund_status"))  # Keep existing value
-        .alias("fund_status")
+        .then(pl.lit(2))  # Rejected Funded Phase: funded_status = 2
+        .otherwise(pl.col("funded_status"))  # Keep existing value
+        .alias("funded_status")
     )
 
     # Count Rejected Funded Phase accounts
@@ -695,7 +695,7 @@ def export_platform_accounts(generate=False):
     if rejected_funded_accounts > 0:
         print(f"      current_phase = 1")
         print(f"      status = 0 (inactive)")
-        print(f"      fund_status = 2 (rejected)")
+        print(f"      funded_status = 2 (rejected)")
 
     # Summary of all scenarios
     total_funded = (
