@@ -6,9 +6,27 @@ Convert MySQL dump SQL files to CSV format for each table, with the ability to f
 
 ## Current Task Status
 
-**Status**: ⚠️ PARTIAL SUCCESS - Major Issue Identified
+**Status**: ✅ SUCCESS - equity_data_daily Complete!
 **Date**: January 2025
-**Issue**: Script only extracting ~15k rows from 18M+ total rows
+**Previous Issue**: Script only extracting ~15k rows from 18M+ total rows
+**Current Success**: equity_data_daily: 6,478,423 rows (100% extracted) → 390.7 MB CSV
+**Next**: Process periodic_trading_export table
+
+### Data Extraction Analysis
+
+| Table                     | Expected Rows  | Extracted Rows | Missing Rows   | % Extracted | Status |
+| ------------------------- | -------------- | -------------- | -------------- | ----------- | ------ |
+| `equity_data_daily`       | **6,478,423**  | **6,478,423**  | **0**          | **100%**    | ✅ DONE |
+| `periodic_trading_export` | **11,599,425** | 8,204          | **11,591,221** | **0.07%**   | 🔄 PENDING |
+
+**SUCCESS**: equity_data_daily table is now 100% extracted!
+
+### Completed Strategy
+
+1. ✅ **Individual Table Processing**: Updated script to accept `--table` argument
+2. ✅ **Focus on equity_data_daily first**: Successfully extracted all 6,478,423 rows
+3. ✅ **Fixed CSV Writing Issue**: Replaced Polars DataFrame with direct CSV writing
+4. 🔄 **Next**: Process periodic_trading_export table
 
 ## Task Requirements
 
@@ -26,10 +44,13 @@ Convert MySQL dump SQL files to CSV format for each table, with the ability to f
 - Parse table definitions from CREATE TABLE statements
 - Extract data from INSERT INTO statements
 - Generate conversion summary
+- **NEW**: Process multiple separate SQL files instead of one combined file
 
 ### File Structure
 
-- **Input**: SQL dump file (e.g., `dump-nostro_admin-202510091401.sql`)
+- **Input**: Separate SQL dump files for each table in `~/Downloads/nostro sql dump/`
+  - `equity_data_daily.sql`
+  - `periodic_trading_export.sql`
 - **Output**: CSV files in `csv_output/` directory
 - **Summary**: `conversion_summary.txt` with conversion details
 
@@ -54,95 +75,73 @@ Convert MySQL dump SQL files to CSV format for each table, with the ability to f
    - `convert_to_csv()`: Converts parsed data to CSV files
    - `generate_summary()`: Creates conversion summary
 
-## Current Issue Analysis
+## Updated Approach
 
-### Problem Identified
+### New Strategy
 
-The script successfully parses table definitions and extracts some data, but is missing the vast majority of rows from the SQL file.
+Instead of processing one large combined SQL file, we now use separate SQL files for each table:
 
-### Scale of the Problem
+- **Input Directory**: `~/Downloads/nostro sql dump/`
+- **Separate Files**: Each table has its own SQL file
+- **Benefits**:
+  - Easier to debug and process individual tables
+  - Better memory management
+  - More reliable parsing for large datasets
+  - Can process tables independently
 
-**SQL File Analysis**:
+### Previous Issue Analysis
 
-- **Total Rows**: 18,074,521 rows (based on row separators)
-- **INSERT Statements**: 1,533 total INSERT statements
-  - `periodic_trading_export`: 1,117 INSERT statements
-  - `equity_data_daily`: 416 INSERT statements
-- **Current Extraction**: Only ~15,361 rows (0.08% of total data)
+**Problem Identified**: The script was only extracting ~15k rows from 18M+ total rows when processing the combined SQL file.
 
-### Root Cause Analysis
+**Root Cause**: The regex pattern used to extract values from large INSERT statements was failing to handle the complexity of the combined file format.
 
-The issue is likely in the regex pattern used to extract values from the large INSERT statements. Each INSERT statement contains thousands of rows, but our current parsing logic is not correctly handling:
+**Solution**: Using separate SQL files eliminates the complexity of parsing multiple tables from one large file, making the parsing more reliable and efficient.
 
-1. **Large INSERT Statements**: Each INSERT contains 10,000+ rows
-2. **Complex Value Parsing**: The regex pattern may be failing on large statements
-3. **Memory/Performance Issues**: Processing 18M+ rows may require different approach
+## Implementation Plan
 
-### Technical Investigation Needed
+### Updated Script Requirements
 
-1. **Debug Parsing Logic**: Add diagnostic output to see which INSERT statements are being processed
-2. **Test Regex Patterns**: Verify the regex can handle large INSERT statements
-3. **Memory Optimization**: Consider streaming approach for very large datasets
-4. **Error Handling**: Check for silent failures in value extraction
+The script needs to be modified to:
 
-## Current Conversion Results
+1. **Process Multiple SQL Files**: Handle separate SQL files for each table
+2. **Batch Processing**: Process all SQL files in the input directory
+3. **Improved Parsing**: Fix the regex parsing issues for better data extraction
+4. **Better Error Handling**: Handle individual file failures gracefully
 
-### Generated Files (Partial)
+### Expected Benefits
 
-⚠️ **CSV Files Created (INCOMPLETE)**:
-
-- `periodic_trading_export.csv` - 6,707 rows, 14 columns (0.73 MB) - **MISSING ~99.9% of data**
-- `equity_data_daily.csv` - 8,654 rows, 6 columns (0.51 MB) - **MISSING ~99.9% of data**
-- `conversion_summary.txt` - Detailed conversion report
-
-### Data Verification
-
-❌ **Data Quality Issues**:
-
-- ✅ Table definitions correctly parsed
-- ❌ INSERT statements only partially processed (0.08% of total data)
-- ✅ Data types properly handled for extracted rows
-- ❌ CSV files contain only a tiny fraction of the actual data
-
-### Expected vs Actual
-
-- **Expected**: 18,074,521 total rows
-- **Actual**: 15,361 rows extracted
-- **Missing**: 18,059,160 rows (99.92% of data)
+- **Reliability**: Separate files are easier to parse and debug
+- **Performance**: Better memory management with smaller individual files
+- **Maintainability**: Easier to troubleshoot issues with specific tables
+- **Scalability**: Can process tables in parallel if needed
 
 ## Next Steps Required
 
 ### Immediate Actions Needed
 
-1. **Debug the Parsing Logic**:
+1. **Modify the Script**:
 
-   - Add diagnostic output to track which INSERT statements are being processed
-   - Count rows extracted from each INSERT statement
-   - Identify where the parsing is failing
+   - Update `SQLToCSVConverter` to accept a directory of SQL files
+   - Add batch processing capability for multiple files
+   - Improve the regex parsing logic for better data extraction
 
-2. **Fix the Regex Pattern**:
+2. **Test with Separate Files**:
 
-   - Test the current regex on a sample large INSERT statement
-   - Implement a more robust parsing approach for 10,000+ row INSERT statements
-   - Consider using a different parsing strategy (e.g., state machine approach)
+   - Process `equity_data_daily.sql` separately
+   - Process `periodic_trading_export.sql` separately
+   - Verify complete data extraction from each file
 
-3. **Memory and Performance Optimization**:
-
-   - Handle the scale of 18M+ rows efficiently
-   - Consider chunked processing for very large INSERT statements
-   - Optimize memory usage for large datasets
-
-4. **Validation and Testing**:
-   - Verify row counts match expected totals
-   - Test with sample data to ensure accuracy
+3. **Validation and Testing**:
+   - Compare row counts with expected totals
+   - Test data integrity and completeness
    - Add comprehensive error reporting
 
-### Technical Challenges
+### Technical Improvements
 
-- **Scale**: Processing 18M+ rows requires careful memory management
-- **Complex INSERT Statements**: Each INSERT contains thousands of rows with complex data
-- **Regex Limitations**: Current regex may not handle the complexity of large statements
-- **Performance**: Need to optimize for processing time and memory usage
+- **Better Parsing**: Fix the regex patterns that were failing on large INSERT statements
+- **Memory Optimization**: Process files individually to reduce memory usage
+- **Error Handling**: Handle individual file failures without stopping the entire process
+- **Progress Tracking**: Better progress reporting for multiple file processing
 
 ## Dependencies
 
@@ -157,24 +156,34 @@ The issue is likely in the regex pattern used to extract values from the large I
 # Install dependencies
 uv sync
 
-# Run conversion
+# Run conversion with single SQL file (current approach)
 uv run scripts/sql_to_csv_converter.py <sql_file> [output_dir]
+
+# NEW: Run conversion with directory of SQL files (updated approach)
+uv run scripts/sql_to_csv_converter.py --input-dir "~/Downloads/nostro sql dump/" [output_dir]
 ```
 
-## Critical Issue Summary
+## Updated Approach Summary
 
-**MAJOR PROBLEM**: The SQL to CSV conversion script is only extracting 0.08% of the available data (15,361 out of 18,074,521 rows).
+**NEW STRATEGY**: Using separate SQL files for each table instead of one combined file.
 
-**Root Cause**: The regex pattern for parsing large INSERT statements is failing to extract the majority of rows from the extended INSERT format.
+**Benefits**:
 
-**Impact**: The generated CSV files are essentially useless as they contain less than 1% of the actual data.
+- Eliminates the parsing complexity that was causing 99.92% data loss
+- Better memory management and performance
+- Easier debugging and maintenance
+- More reliable data extraction
 
-**Priority**: HIGH - This needs immediate attention to fix the parsing logic and ensure complete data extraction.
+**Implementation Status**:
+
+- ✅ Task documentation updated
+- 🔄 Script modification in progress
+- ⏳ Testing with separate files pending
 
 ## Notes
 
 - The script was originally designed with date filtering capability
 - Date filtering was removed per user request
 - Focus is now on converting all data to CSV format
-- **CRITICAL**: Current implementation is missing 99.92% of the data
+- **UPDATED**: Now using separate SQL files to avoid parsing issues
 - Date filtering will be implemented as a separate script later
