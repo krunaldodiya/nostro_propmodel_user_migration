@@ -307,9 +307,28 @@ class SQLToCSVConverter:
 
     def generate_summary(self) -> None:
         """Generate a summary of the conversion."""
-        summary_file = self.output_dir / "conversion_summary.txt"
+        # Generate individual summary files for each table
+        for table_name, table_info in self.table_definitions.items():
+            row_count = len(self.table_data.get(table_name, []))
+            summary_file = self.output_dir / f"{table_name}_conversion_summary.txt"
 
-        with open(summary_file, "w") as f:
+            with open(summary_file, "w") as f:
+                f.write("SQL to CSV Conversion Summary\n")
+                f.write("=" * 40 + "\n\n")
+                f.write(f"Source SQL file: {self.sql_file_path}\n")
+                f.write(f"Output directory: {self.output_dir}\n\n")
+                f.write("Table converted:\n")
+                f.write("-" * 20 + "\n")
+                f.write(f"{table_name}:\n")
+                f.write(f"  Columns: {len(table_info['columns'])}\n")
+                f.write(f"  Rows: {row_count:,}\n")
+                f.write(f"  Column names: {', '.join(table_info['columns'])}\n\n")
+
+            print(f"Summary for {table_name} saved to: {summary_file}")
+
+        # Also generate a combined summary file
+        combined_summary_file = self.output_dir / "conversion_summary.txt"
+        with open(combined_summary_file, "w") as f:
             f.write("SQL to CSV Conversion Summary\n")
             f.write("=" * 40 + "\n\n")
             f.write(f"Source SQL file: {self.sql_file_path}\n")
@@ -324,7 +343,7 @@ class SQLToCSVConverter:
                 f.write(f"  Rows: {row_count:,}\n")
                 f.write(f"  Column names: {', '.join(table_info['columns'])}\n\n")
 
-        print(f"\nSummary saved to: {summary_file}")
+        print(f"\nCombined summary saved to: {combined_summary_file}")
 
     def process_multiple_sql_files(self, sql_files: List[Path]) -> None:
         """Process multiple SQL files and combine results."""
