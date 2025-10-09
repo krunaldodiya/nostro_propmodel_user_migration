@@ -54,6 +54,12 @@ Examples:
   # Generate payout requests export
   uv run main.py --generate --payout-requests
 
+  # Preview breach account activities export
+  uv run main.py --breach-account-activities
+
+  # Generate breach account activities export
+  uv run main.py --generate --breach-account-activities
+
   # Generate all exports
   uv run main.py --generate --all
         """,
@@ -99,6 +105,12 @@ Examples:
         help="Export payout requests table",
     )
 
+    parser.add_argument(
+        "--breach-account-activities",
+        action="store_true",
+        help="Export breach account activities table",
+    )
+
     parser.add_argument("--all", action="store_true", help="Export all tables")
 
     args = parser.parse_args()
@@ -112,6 +124,7 @@ Examples:
         or args.platform_groups
         or args.account_stats
         or args.payout_requests
+        or args.breach_account_activities
         or args.all
     ):
         parser.print_help()
@@ -129,6 +142,7 @@ Examples:
             "platform_accounts",
             "account_stats",
             "payout_requests",
+            "breach_account_activities",
         ]
     else:
         if args.users:
@@ -145,6 +159,8 @@ Examples:
             exports_to_run.append("account_stats")
         if args.payout_requests:
             exports_to_run.append("payout_requests")
+        if args.breach_account_activities:
+            exports_to_run.append("breach_account_activities")
 
     # Run exports
     for export_type in exports_to_run:
@@ -181,6 +197,12 @@ Examples:
                 from scripts.payout_requests_export import export_payout_requests
 
                 export_payout_requests(generate=args.generate)
+            elif export_type == "breach_account_activities":
+                from scripts.breach_account_activities_export import (
+                    export_breach_account_activities,
+                )
+
+                export_breach_account_activities(generate=args.generate)
         except Exception as e:
             print(f"\n❌ Error during {export_type} export: {e}")
             import traceback

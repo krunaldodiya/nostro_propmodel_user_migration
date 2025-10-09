@@ -1,0 +1,7 @@
+[
+  "id",
+  "breach_count",
+  "last_breach_date",
+  "is_breached",
+  "platform_account_uuid"
+]
