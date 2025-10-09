@@ -1,0 +1,9 @@
+[
+  "uuid",
+  "user_uuid",
+  "event",
+  "created_at",
+  "updated_at",
+  "reason",
+  "platform_account_uuid"
+]

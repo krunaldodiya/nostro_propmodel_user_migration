@@ -60,6 +60,12 @@ Examples:
   # Generate breach account activities export
   uv run main.py --generate --breach-account-activities
 
+  # Preview platform events export
+  uv run main.py --platform-events
+
+  # Generate platform events export
+  uv run main.py --generate --platform-events
+
   # Generate all exports
   uv run main.py --generate --all
         """,
@@ -111,6 +117,12 @@ Examples:
         help="Export breach account activities table",
     )
 
+    parser.add_argument(
+        "--platform-events",
+        action="store_true",
+        help="Export platform events table",
+    )
+
     parser.add_argument("--all", action="store_true", help="Export all tables")
 
     args = parser.parse_args()
@@ -125,6 +137,7 @@ Examples:
         or args.account_stats
         or args.payout_requests
         or args.breach_account_activities
+        or args.platform_events
         or args.all
     ):
         parser.print_help()
@@ -143,6 +156,7 @@ Examples:
             "account_stats",
             "payout_requests",
             "breach_account_activities",
+            "platform_events",
         ]
     else:
         if args.users:
@@ -161,6 +175,8 @@ Examples:
             exports_to_run.append("payout_requests")
         if args.breach_account_activities:
             exports_to_run.append("breach_account_activities")
+        if args.platform_events:
+            exports_to_run.append("platform_events")
 
     # Run exports
     for export_type in exports_to_run:
@@ -203,6 +219,10 @@ Examples:
                 )
 
                 export_breach_account_activities(generate=args.generate)
+            elif export_type == "platform_events":
+                from scripts.platform_events_export import export_platform_events
+
+                export_platform_events(generate=args.generate)
         except Exception as e:
             print(f"\n❌ Error during {export_type} export: {e}")
             import traceback
