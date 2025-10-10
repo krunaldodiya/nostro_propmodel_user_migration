@@ -15,6 +15,26 @@ def export_discounts(generate=False):
     discounts_df = pl.read_csv("csv/input/discount_codes.csv")
     print(f"Loaded {len(discounts_df)} discount codes")
 
+    # Check for and handle duplicate codes
+    if "code" in discounts_df.columns:
+        unique_codes = discounts_df["code"].n_unique()
+        total_codes = len(discounts_df)
+        duplicates = total_codes - unique_codes
+
+        if duplicates > 0:
+            print(
+                f"\nFound {duplicates} duplicate codes out of {total_codes} total records"
+            )
+            print("Removing duplicates by keeping the first occurrence of each code...")
+
+            # Keep only the first occurrence of each code (based on original order)
+            discounts_df = discounts_df.unique(subset=["code"], keep="first")
+
+            print(f"After removing duplicates: {len(discounts_df)} records")
+            print(f"Removed {total_codes - len(discounts_df)} duplicate records")
+        else:
+            print("✅ No duplicate codes found")
+
     # Add uuid column with random UUIDs (insert right after id)
     discounts_df = discounts_df.with_columns(
         pl.Series("uuid", [str(uuid.uuid4()) for _ in range(len(discounts_df))])
