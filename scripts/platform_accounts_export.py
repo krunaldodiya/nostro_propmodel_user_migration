@@ -16,6 +16,14 @@ def export_platform_accounts(generate=False):
     accounts_df = pl.read_csv("csv/input/mt5_users.csv", infer_schema_length=100000)
     print(f"Loaded {len(accounts_df)} platform accounts")
 
+    # Filter out TradeLocker entries (login IDs starting with "D#")
+    print("\nFiltering out TradeLocker entries...")
+    tradelocker_count = accounts_df.filter(pl.col("login").str.starts_with("D#")).height
+    print(f"Found {tradelocker_count} TradeLocker entries to remove")
+
+    accounts_df = accounts_df.filter(~pl.col("login").str.starts_with("D#"))
+    print(f"Remaining MT5 accounts after filtering: {len(accounts_df)}")
+
     # Load account_stats.csv for group mapping (primary source)
     print("\nLoading csv/input/account_stats.csv for group mapping...")
     try:
