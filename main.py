@@ -66,6 +66,12 @@ Examples:
   # Generate platform events export
   uv run main.py --generate --platform-events
 
+  # Preview periodic trading export
+  uv run main.py --periodic-trading-export
+
+  # Generate periodic trading export
+  uv run main.py --generate --periodic-trading-export
+
   # Generate all exports
   uv run main.py --generate --all
         """,
@@ -123,6 +129,12 @@ Examples:
         help="Export platform events table",
     )
 
+    parser.add_argument(
+        "--periodic-trading-export",
+        action="store_true",
+        help="Export periodic trading export table",
+    )
+
     parser.add_argument("--all", action="store_true", help="Export all tables")
 
     args = parser.parse_args()
@@ -138,6 +150,7 @@ Examples:
         or args.payout_requests
         or args.breach_account_activities
         or args.platform_events
+        or args.periodic_trading_export
         or args.all
     ):
         parser.print_help()
@@ -157,6 +170,7 @@ Examples:
             "payout_requests",
             "breach_account_activities",
             "platform_events",
+            "periodic_trading_export",
         ]
     else:
         if args.users:
@@ -177,6 +191,8 @@ Examples:
             exports_to_run.append("breach_account_activities")
         if args.platform_events:
             exports_to_run.append("platform_events")
+        if args.periodic_trading_export:
+            exports_to_run.append("periodic_trading_export")
 
     # Run exports
     for export_type in exports_to_run:
@@ -223,6 +239,10 @@ Examples:
                 from scripts.platform_events_export import export_platform_events
 
                 export_platform_events(generate=args.generate)
+            elif export_type == "periodic_trading_export":
+                from scripts.periodic_trading_export import export_periodic_trading_export
+
+                export_periodic_trading_export(generate=args.generate)
         except Exception as e:
             print(f"\n❌ Error during {export_type} export: {e}")
             import traceback

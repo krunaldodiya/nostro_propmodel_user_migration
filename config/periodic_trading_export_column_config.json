@@ -1,0 +1,17 @@
+[
+  "id",
+  "deal_id",
+  "position_id",
+  "deal_type",
+  "profit",
+  "deal_time",
+  "deal_entry",
+  "deal_price",
+  "deal_symbol",
+  "deal_stoploss",
+  "deal_volume",
+  "deal_commission",
+  "dupe_detected",
+  "deal_swap",
+  "platform_account_uuid"
+]
