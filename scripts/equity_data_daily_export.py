@@ -33,7 +33,7 @@ def export_equity_data_daily(generate=False):
     # Generate UUIDs
     print("\nGenerating UUIDs for equity data records...")
     equity_df = equity_df.with_columns(
-        pl.lit("")
+        pl.int_range(pl.len())
         .map_elements(lambda x: str(uuid.uuid4()), return_dtype=pl.Utf8)
         .alias("id")
     )
