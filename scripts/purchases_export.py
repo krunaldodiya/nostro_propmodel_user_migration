@@ -65,13 +65,31 @@ def export_purchases(generate=False):
         new_discounts_df = pl.read_csv(
             "csv/output/new_discount_codes.csv", infer_schema_length=100000
         )
-        print(f"Loaded {len(original_discounts_df)} discount codes")
+        print(f"Loaded {len(original_discounts_df)} original discount codes")
+        print(f"Loaded {len(new_discounts_df)} new discount codes")
 
-        # Create a mapping from old discount id to new uuid by aligning rows
-        discount_id_to_uuid = dict(
-            zip(original_discounts_df["id"], new_discounts_df["uuid"])
+        # Create a mapping from old discount id to new uuid by matching codes
+        # Since we removed duplicates, we need to map by code instead of row alignment
+        print("Creating discount mapping by matching codes...")
+
+        # Create mapping from original discount codes (id -> code)
+        original_id_to_code = dict(
+            zip(original_discounts_df["id"], original_discounts_df["code"])
         )
+
+        # Create mapping from new discount codes (code -> uuid)
+        new_code_to_uuid = dict(zip(new_discounts_df["code"], new_discounts_df["uuid"]))
+
+        # Create final mapping (original_id -> uuid) by going through code
+        discount_id_to_uuid = {}
+        for original_id, code in original_id_to_code.items():
+            if code in new_code_to_uuid:
+                discount_id_to_uuid[original_id] = new_code_to_uuid[code]
+
         print(f"Created mapping for {len(discount_id_to_uuid)} discount codes")
+        print(
+            f"Note: {len(original_discounts_df) - len(discount_id_to_uuid)} original discount codes were not mapped (likely duplicates that were removed)"
+        )
 
         # Map discount_id to discount_uuid using the discount_id_to_uuid mapping
         purchases_df = purchases_df.with_columns(
@@ -163,7 +181,9 @@ def export_purchases(generate=False):
             )
             print(f"Included columns: {', '.join(available_columns)}")
         else:
-            print("\nTo generate csv/output/new_purchases.csv, run with --generate flag:")
+            print(
+                "\nTo generate csv/output/new_purchases.csv, run with --generate flag:"
+            )
             print("  uv run main.py --generate --purchases")
 
     except FileNotFoundError:
