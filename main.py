@@ -72,6 +72,12 @@ Examples:
   # Generate periodic trading export
   uv run main.py --generate --periodic-trading-export
 
+  # Preview equity data daily export
+  uv run main.py --equity-data-daily
+
+  # Generate equity data daily export
+  uv run main.py --generate --equity-data-daily
+
   # Generate all exports
   uv run main.py --generate --all
         """,
@@ -135,6 +141,12 @@ Examples:
         help="Export periodic trading export table",
     )
 
+    parser.add_argument(
+        "--equity-data-daily",
+        action="store_true",
+        help="Export equity data daily table",
+    )
+
     parser.add_argument("--all", action="store_true", help="Export all tables")
 
     args = parser.parse_args()
@@ -151,6 +163,7 @@ Examples:
         or args.breach_account_activities
         or args.platform_events
         or args.periodic_trading_export
+        or args.equity_data_daily
         or args.all
     ):
         parser.print_help()
@@ -171,6 +184,7 @@ Examples:
             "breach_account_activities",
             "platform_events",
             "periodic_trading_export",
+            "equity_data_daily",
         ]
     else:
         if args.users:
@@ -193,6 +207,8 @@ Examples:
             exports_to_run.append("platform_events")
         if args.periodic_trading_export:
             exports_to_run.append("periodic_trading_export")
+        if args.equity_data_daily:
+            exports_to_run.append("equity_data_daily")
 
     # Run exports
     for export_type in exports_to_run:
@@ -240,9 +256,15 @@ Examples:
 
                 export_platform_events(generate=args.generate)
             elif export_type == "periodic_trading_export":
-                from scripts.periodic_trading_export import export_periodic_trading_export
+                from scripts.periodic_trading_export import (
+                    export_periodic_trading_export,
+                )
 
                 export_periodic_trading_export(generate=args.generate)
+            elif export_type == "equity_data_daily":
+                from scripts.equity_data_daily_export import export_equity_data_daily
+
+                export_equity_data_daily(generate=args.generate)
         except Exception as e:
             print(f"\n❌ Error during {export_type} export: {e}")
             import traceback

@@ -1,0 +1,9 @@
+[
+  "id",
+  "day",
+  "created_date",
+  "equity",
+  "balance",
+  "equity_eod_mt5",
+  "platform_account_uuid"
+]

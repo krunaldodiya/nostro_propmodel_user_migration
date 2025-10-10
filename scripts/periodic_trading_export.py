@@ -42,7 +42,9 @@ def export_periodic_trading_export(generate=False):
             )
         )
 
-        print(f"Created platform account mapping for {len(trading_account_to_platform_uuid)} accounts")
+        print(
+            f"Created platform account mapping for {len(trading_account_to_platform_uuid)} accounts"
+        )
 
         # Map trading_account to platform_account_uuid
         print("\nMapping trading_account to platform_account_uuid...")
@@ -61,15 +63,21 @@ def export_periodic_trading_export(generate=False):
         )
 
         # Check mapping results
-        mapped_count = trading_df.filter(pl.col("platform_account_uuid").is_not_null()).height
-        unmapped_count = trading_df.filter(pl.col("platform_account_uuid").is_null()).height
+        mapped_count = trading_df.filter(
+            pl.col("platform_account_uuid").is_not_null()
+        ).height
+        unmapped_count = trading_df.filter(
+            pl.col("platform_account_uuid").is_null()
+        ).height
 
         print(f"  Mapped records: {mapped_count}")
         print(f"  Unmapped records: {unmapped_count}")
         print(f"  Mapping rate: {mapped_count/len(trading_df)*100:.1f}%")
 
         if unmapped_count > 0:
-            print("  Warning: Some trading_account values don't have matching platform accounts")
+            print(
+                "  Warning: Some trading_account values don't have matching platform accounts"
+            )
             # Show some examples of unmapped records
             unmapped_examples = (
                 trading_df.filter(pl.col("platform_account_uuid").is_null())
@@ -77,25 +85,42 @@ def export_periodic_trading_export(generate=False):
                 .unique()
                 .head(10)
             )
-            print(f"  Examples of unmapped trading_account values: {unmapped_examples.to_series().to_list()}")
+            print(
+                f"  Examples of unmapped trading_account values: {unmapped_examples.to_series().to_list()}"
+            )
 
     except FileNotFoundError:
-        print("\n⚠️  Warning: csv/output/new_platform_accounts.csv not found. Skipping platform account mapping.")
+        print(
+            "\n⚠️  Warning: csv/output/new_platform_accounts.csv not found. Skipping platform account mapping."
+        )
         # Add null platform_account_uuid column
-        trading_df = trading_df.with_columns(pl.lit(None).alias("platform_account_uuid"))
+        trading_df = trading_df.with_columns(
+            pl.lit(None).alias("platform_account_uuid")
+        )
+
+    # Filter out records with null platform_account_uuid
+    print("\nFiltering out records with null platform_account_uuid...")
+    initial_count = len(trading_df)
+    trading_df = trading_df.filter(pl.col("platform_account_uuid").is_not_null())
+    filtered_count = len(trading_df)
+    removed_count = initial_count - filtered_count
+    print(f"Removed {removed_count} records with null platform_account_uuid")
+    print(f"Remaining records: {filtered_count}")
 
     # Convert data types to match PostgreSQL schema
     print("\nConverting data types to match PostgreSQL schema...")
-    trading_df = trading_df.with_columns([
-        # Convert deal_volume from Int64 to Float64 to match schema
-        pl.col("deal_volume").cast(pl.Float64),
-        # Convert dupe_detected from Int64 to Bool to match schema
-        pl.col("dupe_detected").cast(pl.Boolean),
-        # Convert deal_swap from Int64 to Float64 to match schema
-        pl.col("deal_swap").cast(pl.Float64),
-        # Convert deal_time to proper datetime format
-        pl.col("deal_time").str.to_datetime().alias("deal_time"),
-    ])
+    trading_df = trading_df.with_columns(
+        [
+            # Convert deal_volume from Int64 to Float64 to match schema
+            pl.col("deal_volume").cast(pl.Float64),
+            # Convert dupe_detected from Int64 to Bool to match schema
+            pl.col("dupe_detected").cast(pl.Boolean),
+            # Convert deal_swap from Int64 to Float64 to match schema
+            pl.col("deal_swap").cast(pl.Float64),
+            # Convert deal_time to proper datetime format
+            pl.col("deal_time").str.to_datetime().alias("deal_time"),
+        ]
+    )
 
     # Load column configuration
     print("\nLoading column configuration...")
@@ -120,7 +145,7 @@ def export_periodic_trading_export(generate=False):
             "deal_commission",
             "dupe_detected",
             "deal_swap",
-            "platform_account_uuid"
+            "platform_account_uuid",
         ]
 
     # Select and reorder columns according to configuration
@@ -151,10 +176,14 @@ def export_periodic_trading_export(generate=False):
         output_file = "csv/output/new_periodic_trading_export.csv"
         print(f"\nGenerating {output_file}...")
         trading_df.write_csv(output_file)
-        print(f"Successfully generated {output_file} with {len(trading_df)} rows and {len(trading_df.columns)} columns")
+        print(
+            f"Successfully generated {output_file} with {len(trading_df)} rows and {len(trading_df.columns)} columns"
+        )
         print(f"Included columns: {', '.join(trading_df.columns)}")
     else:
-        print(f"\nTo generate csv/output/new_periodic_trading_export.csv, run with --generate flag:")
+        print(
+            f"\nTo generate csv/output/new_periodic_trading_export.csv, run with --generate flag:"
+        )
         print(f"  uv run main.py --generate --periodic-trading-export")
 
 

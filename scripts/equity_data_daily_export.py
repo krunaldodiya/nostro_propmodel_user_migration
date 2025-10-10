@@ -1,233 +1,175 @@
 #!/usr/bin/env python3
 """
 Equity Data Daily Export Script
-Maps trading_account to platform_login_id and adds platform_account_uuid column
+
+This script exports equity_data_daily data from csv/input/equity_data_daily.csv
+and generates a new CSV file with the following transformations:
+- Generates UUID for id column
+- Maps trading_account to platform_account_uuid using new_platform_accounts.csv
+- Converts data types to match PostgreSQL schema
+- Filters out records with null platform_account_uuid
+- Reorders columns according to configuration
+
+Output: csv/output/new_equity_data_daily.csv
 """
 
 import polars as pl
-import argparse
-from pathlib import Path
-import sys
+import uuid
+import json
+import os
 
 
-def load_platform_accounts_mapping(platform_accounts_file: str) -> pl.DataFrame:
-    """
-    Load platform accounts and create a mapping from platform_login_id to uuid
+def export_equity_data_daily(generate=False):
+    """Export equity data daily with platform account mapping."""
+    print("=" * 70)
+    print("                  EXPORTING EQUITY_DATA_DAILY                    ")
+    print("=" * 70)
 
-    Args:
-        platform_accounts_file: Path to new_platform_accounts.csv
+    # Load equity data
+    print("\nLoading csv/input/equity_data_daily.csv...")
+    equity_df = pl.read_csv("csv/input/equity_data_daily.csv")
+    print(f"Loaded {len(equity_df)} equity data records")
 
-    Returns:
-        DataFrame with platform_login_id and uuid columns
-    """
-    print(f"Loading platform accounts from: {platform_accounts_file}")
+    # Generate UUIDs
+    print("\nGenerating UUIDs for equity data records...")
+    equity_df = equity_df.with_columns(
+        pl.lit("")
+        .map_elements(lambda x: str(uuid.uuid4()), return_dtype=pl.Utf8)
+        .alias("id")
+    )
 
+    # Load platform accounts for UUID mapping
+    print("\nLoading platform accounts for UUID mapping...")
     try:
-        # Load platform accounts with flexible parsing
-        platform_accounts = pl.read_csv(
-            platform_accounts_file, infer_schema_length=10000, ignore_errors=True
-        )
+        platform_accounts_df = pl.read_csv("csv/output/new_platform_accounts.csv")
+        print(f"Loaded {len(platform_accounts_df)} platform accounts")
 
-        # Create mapping: platform_login_id -> uuid
-        # Convert platform_login_id to string for consistent joining
-        mapping = platform_accounts.select(
-            [
-                pl.col("platform_login_id").cast(
-                    pl.Utf8
-                ),  # Convert to string for joining
-                pl.col("uuid").alias("platform_account_uuid"),
+        # Create mapping from platform_login_id to platform_account_uuid
+        trading_account_to_platform_uuid = {}
+        for row in platform_accounts_df.iter_rows(named=True):
+            trading_account_to_platform_uuid[str(row["platform_login_id"])] = row[
+                "uuid"
             ]
+
+        print(
+            f"Created platform account mapping for {len(trading_account_to_platform_uuid)} accounts"
         )
 
-        print(f"Loaded {len(mapping)} platform account mappings")
-        return mapping
-
-    except Exception as e:
-        print(f"Error loading platform accounts: {e}")
-        sys.exit(1)
-
-
-def process_equity_data_daily(
-    equity_file: str, platform_mapping: pl.DataFrame, output_file: str
-) -> bool:
-    """
-    Process equity data daily and add platform_account_uuid mapping
-
-    Args:
-        equity_file: Path to filtered equity data daily CSV
-        platform_mapping: DataFrame with platform_login_id to uuid mapping
-        output_file: Path for output CSV file
-
-    Returns:
-        True if successful, False otherwise
-    """
-    print(f"Processing equity data from: {equity_file}")
-
-    try:
-        # Read equity data
-        equity_data = pl.read_csv(equity_file)
-        print(f"Loaded {len(equity_data)} equity records")
-
-        # Join with platform mapping
-        print("Joining with platform account mapping...")
-        # Convert trading_account to string for joining
-        enriched_data = (
-            equity_data.with_columns(
-                pl.col("trading_account").cast(pl.Utf8).alias("trading_account_str")
+        # Map trading_account to platform_account_uuid
+        print("\nMapping trading_account to platform_account_uuid...")
+        equity_df = equity_df.with_columns(
+            pl.col("trading_account")
+            .cast(pl.Utf8)
+            .map_elements(
+                lambda x: trading_account_to_platform_uuid.get(x), return_dtype=pl.Utf8
             )
-            .join(
-                platform_mapping,
-                left_on="trading_account_str",
-                right_on="platform_login_id",
-                how="left",
-            )
-            .drop("trading_account_str")
-        )  # Remove temporary column
+            .alias("platform_account_uuid")
+        )
 
-        # Check how many records were matched
-        matched_count = enriched_data.filter(
+        # Check mapping results
+        mapped_count = equity_df.filter(
             pl.col("platform_account_uuid").is_not_null()
         ).height
-        unmatched_count = enriched_data.filter(
+        unmapped_count = equity_df.filter(
             pl.col("platform_account_uuid").is_null()
         ).height
 
-        print(f"Matched records: {matched_count}")
-        print(f"Unmatched records: {unmatched_count}")
+        print(f"  Mapped records: {mapped_count}")
+        print(f"  Unmapped records: {unmapped_count}")
+        print(f"  Mapping rate: {mapped_count/(mapped_count+unmapped_count)*100:.1f}%")
 
-        if unmatched_count > 0:
+        if unmapped_count > 0:
             print(
-                "Warning: Some trading_account values don't have matching platform_login_id"
+                "  Warning: Some trading_account values don't have matching platform accounts"
             )
-            # Show some examples of unmatched records
-            unmatched_examples = (
-                enriched_data.filter(pl.col("platform_account_uuid").is_null())
+            # Show some examples of unmapped records
+            unmapped_examples = (
+                equity_df.filter(pl.col("platform_account_uuid").is_null())
                 .select("trading_account")
                 .unique()
                 .head(10)
             )
             print(
-                f"Examples of unmatched trading_account values: {unmatched_examples.to_series().to_list()}"
+                f"  Examples of unmapped trading_account values: {unmapped_examples.to_series().to_list()}"
             )
 
-        # Reorder columns to put platform_account_uuid after trading_account
-        column_order = [
-            "trading_account",
-            "platform_account_uuid",
-            "day",
-            "created_date",
-            "equity",
-            "balance",
-            "equity_eod_mt5",
-        ]
-
-        final_data = enriched_data.select(column_order)
-
-        # Write output
-        print(f"Writing enriched data to: {output_file}")
-        final_data.write_csv(output_file)
-
-        print(f"Successfully created {output_file}")
-        print(f"Final record count: {len(final_data)}")
-
-        return True
-
-    except Exception as e:
-        print(f"Error processing equity data: {e}")
-        return False
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Export equity data daily with platform account UUID mapping"
-    )
-    parser.add_argument(
-        "--equity-file",
-        required=True,
-        help="Path to filtered equity data daily CSV file",
-    )
-    parser.add_argument(
-        "--platform-accounts",
-        required=True,
-        help="Path to new_platform_accounts.csv file",
-    )
-    parser.add_argument("--output", required=True, help="Path for output CSV file")
-    parser.add_argument(
-        "--preview",
-        action="store_true",
-        help="Preview mode - show sample data without writing file",
-    )
-
-    args = parser.parse_args()
-
-    # Validate input files
-    if not Path(args.equity_file).exists():
-        print(f"Error: Equity file not found: {args.equity_file}")
-        sys.exit(1)
-
-    if not Path(args.platform_accounts).exists():
-        print(f"Error: Platform accounts file not found: {args.platform_accounts}")
-        sys.exit(1)
-
-    # Load platform accounts mapping
-    platform_mapping = load_platform_accounts_mapping(args.platform_accounts)
-
-    if args.preview:
-        print("\n" + "=" * 60)
-        print("PREVIEW MODE - Sample of enriched data:")
-        print("=" * 60)
-
-        # Load and process a small sample for preview
-        equity_sample = pl.read_csv(args.equity_file).head(10)
-        enriched_sample = (
-            equity_sample.with_columns(
-                pl.col("trading_account").cast(pl.Utf8).alias("trading_account_str")
-            )
-            .join(
-                platform_mapping,
-                left_on="trading_account_str",
-                right_on="platform_login_id",
-                how="left",
-            )
-            .drop("trading_account_str")
+    except FileNotFoundError:
+        print(
+            "\n⚠️  Warning: csv/output/new_platform_accounts.csv not found. Skipping platform account mapping."
         )
+        # Add null platform_account_uuid column
+        equity_df = equity_df.with_columns(pl.lit(None).alias("platform_account_uuid"))
 
-        # Reorder columns
-        column_order = [
-            "trading_account",
-            "platform_account_uuid",
+    # Filter out records with null platform_account_uuid
+    print("\nFiltering out records with null platform_account_uuid...")
+    initial_count = len(equity_df)
+    equity_df = equity_df.filter(pl.col("platform_account_uuid").is_not_null())
+    filtered_count = len(equity_df)
+    removed_count = initial_count - filtered_count
+    print(f"Removed {removed_count} records with null platform_account_uuid")
+    print(f"Remaining records: {filtered_count}")
+
+    # Convert data types to match PostgreSQL schema
+    print("\nConverting data types to match PostgreSQL schema...")
+    equity_df = equity_df.with_columns(
+        [
+            # Convert day to date format
+            pl.col("day").str.to_date().alias("day"),
+            # Convert created_date to proper datetime format
+            pl.col("created_date").str.to_datetime().alias("created_date"),
+            # Convert equity_eod_mt5 to Float64 (handle nulls)
+            pl.col("equity_eod_mt5").cast(pl.Float64),
+        ]
+    )
+
+    # Load column configuration
+    print("\nLoading column configuration...")
+    try:
+        with open("config/equity_data_daily_column_config.json", "r") as f:
+            column_config = json.load(f)
+        print(f"Loaded column configuration with {len(column_config)} columns")
+    except FileNotFoundError:
+        print("⚠️  Warning: Column configuration not found. Using default order.")
+        column_config = [
+            "id",
             "day",
             "created_date",
             "equity",
             "balance",
             "equity_eod_mt5",
+            "platform_account_uuid",
         ]
 
-        preview_data = enriched_sample.select(column_order)
-        print(preview_data)
+    # Select and reorder columns
+    print("\nSelecting and reordering columns...")
+    equity_df = equity_df.select(column_config)
+    print(f"Selected {len(equity_df.columns)} columns: {equity_df.columns}")
 
-        # Show statistics
-        matched = preview_data.filter(
-            pl.col("platform_account_uuid").is_not_null()
-        ).height
-        total = len(preview_data)
-        print(f"\nSample statistics:")
-        print(f"Total records: {total}")
-        print(f"Matched records: {matched}")
-        print(f"Match rate: {matched/total*100:.1f}%")
+    # Display sample data
+    print(f"\nEquity Data Daily DataFrame shape: {equity_df.shape}")
+    print("First few rows:")
+    print(equity_df.head())
 
+    print("\nData types:")
+    for col in equity_df.columns:
+        dtype = equity_df[col].dtype
+        print(f"  {col}: {dtype}")
+
+    # Generate output file
+    output_file = "csv/output/new_equity_data_daily.csv"
+    if generate:
+        print(f"\nGenerating {output_file}...")
+        equity_df.write_csv(output_file)
+        print(
+            f"Successfully generated {output_file} with {len(equity_df)} rows and {len(equity_df.columns)} columns"
+        )
+        print(f"Included columns: {', '.join(equity_df.columns)}")
     else:
-        # Process full dataset
-        success = process_equity_data_daily(
-            args.equity_file, platform_mapping, args.output
+        print(
+            f"\nTo generate csv/output/new_equity_data_daily.csv, run with --generate flag:"
         )
-
-        if success:
-            print("✅ Export completed successfully!")
-        else:
-            print("❌ Export failed!")
-            sys.exit(1)
+        print(f"  uv run main.py --generate --equity-data-daily")
 
 
 if __name__ == "__main__":
-    main()
+    export_equity_data_daily(generate=True)
