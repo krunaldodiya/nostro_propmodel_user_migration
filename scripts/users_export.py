@@ -50,7 +50,12 @@ def export_users(generate=False):
 
     # Rename columns
     df = df.rename(
-        {"username": "email", "firstname": "first_name", "lastname": "last_name"}
+        {
+            "username": "email",
+            "firstname": "first_name",
+            "lastname": "last_name",
+            "ref_link_clicks": "ref_link_count",
+        }
     )
 
     # Blank out password column for security
