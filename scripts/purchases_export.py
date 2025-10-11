@@ -130,6 +130,12 @@ def export_purchases(generate=False):
             pl.col("created_at").alias("updated_at")
         )
 
+    # Capitalize payment_method column for consistency
+    if "payment_method" in purchases_df.columns:
+        purchases_df = purchases_df.with_columns(
+            pl.col("payment_method").str.to_uppercase().alias("payment_method")
+        )
+
     # Add new PostgreSQL columns that don't exist in the CSV
     if "webhook_response" not in purchases_df.columns:
         purchases_df = purchases_df.with_columns(pl.lit(None).alias("webhook_response"))

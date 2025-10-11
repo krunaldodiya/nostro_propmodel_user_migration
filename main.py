@@ -84,7 +84,7 @@ Examples:
   # Generate advanced challenge settings export
   uv run main.py --generate --advanced-challenge-settings
 
-  # Generate all exports
+  # Generate all exports (in dependency order)
   uv run main.py --generate --all
         """,
     )
@@ -186,19 +186,25 @@ Examples:
     exports_to_run = []
 
     if args.all:
+        # Generate CSVs in dependency order to ensure foreign key integrity
         exports_to_run = [
+            # Phase 1: Independent tables (no dependencies)
             "users",
             "discount_codes",
             "platform_groups",
-            "purchases",
-            "platform_accounts",
-            "account_stats",
-            "payout_requests",
-            "breach_account_activities",
-            "platform_events",
-            "periodic_trading_export",
-            "equity_data_daily",
-            "advanced_challenge_settings",
+            # Phase 2: First-level dependencies
+            "purchases",  # depends on: users, discount_codes
+            # Phase 3: Second-level dependencies
+            "platform_accounts",  # depends on: users, purchases, platform_groups
+            "equity_data_daily",  # depends on: platform_accounts
+            "periodic_trading_export",  # depends on: platform_accounts
+            # Phase 4: Third-level dependencies
+            "advanced_challenge_settings",  # depends on: platform_groups, platform_accounts
+            # Note: The following exports are not yet implemented:
+            # "account_stats",  # depends on: platform_accounts
+            # "payout_requests",  # depends on: users
+            # "breach_account_activities",  # depends on: platform_accounts
+            # "platform_events",  # depends on: platform_accounts
         ]
     else:
         if args.users:
@@ -226,7 +232,7 @@ Examples:
         if args.advanced_challenge_settings:
             exports_to_run.append("advanced_challenge_settings")
 
-    # Run exports
+    # Run exports in dependency order
     for export_type in exports_to_run:
         print(f"\n{'='*70}")
         print(f"{'EXPORTING ' + export_type.upper():^70}")
