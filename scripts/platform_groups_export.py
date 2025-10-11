@@ -27,8 +27,24 @@ def export_platform_groups(generate=False):
     print(f"Found {len(demo_groups)} unique groups starting with 'demo\\' in the file")
 
     # Filter to only include challenge groups (group_type = 'challenge')
-    filtered_df = groups_df.filter(pl.col("group_type") == "challenge")
-    print(f"Filtered to {len(filtered_df)} challenge groups")
+    # AND groups that start with 'demo\Nostro' (handles both single and double backslashes)
+    filtered_df = groups_df.filter(
+        (pl.col("group_type") == "challenge")
+        & (
+            pl.col("name").str.starts_with("demo\\Nostro")
+            | pl.col("name").str.starts_with("demo\\\\Nostro")
+        )
+    )
+    print(
+        f"Filtered to {len(filtered_df)} challenge groups starting with 'demo\\Nostro' (handles backslashes)"
+    )
+
+    # Ensure platform_name is always uppercase "MT5"
+    if "platform_name" in filtered_df.columns:
+        filtered_df = filtered_df.with_columns(
+            pl.col("platform_name").str.to_uppercase().alias("platform_name")
+        )
+        print("Updated platform_name to uppercase: MT5")
 
     # Show the groups that were found
     found_groups = filtered_df.select("name").unique().sort("name")

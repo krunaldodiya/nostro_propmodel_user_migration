@@ -368,9 +368,9 @@ def export_platform_accounts(generate=False):
                 pl.lit(None).alias("platform_login_id")
             )
 
-    # Add platform_name column (default to 'mt5')
+    # Add platform_name column (default to 'MT5' - uppercase to match platform groups)
     if "platform_name" not in accounts_df.columns:
-        accounts_df = accounts_df.with_columns(pl.lit("mt5").alias("platform_name"))
+        accounts_df = accounts_df.with_columns(pl.lit("MT5").alias("platform_name"))
 
     # Add remote_group_name column (default to 'demo\PropModel\common')
     if "remote_group_name" not in accounts_df.columns:
