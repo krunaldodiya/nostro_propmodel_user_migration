@@ -201,12 +201,14 @@ def export_discounts(generate=False):
         print(discounts_df.head())
 
         if generate:
-            discounts_df.write_csv("new_discount_codes.csv")
+            discounts_df.write_csv("csv/output/new_discount_codes.csv")
             print(
-                f"\nSuccessfully generated new_discount_codes.csv with {len(discounts_df)} rows and {len(discounts_df.columns)} columns"
+                f"\nSuccessfully generated csv/output/new_discount_codes.csv with {len(discounts_df)} rows and {len(discounts_df.columns)} columns"
             )
         else:
-            print("\nTo generate new_discount_codes.csv, run with --generate flag:")
+            print(
+                "\nTo generate csv/output/new_discount_codes.csv, run with --generate flag:"
+            )
             print("  uv run main.py --generate --discount-codes")
 
     except json.JSONDecodeError as e:
@@ -214,7 +216,7 @@ def export_discounts(generate=False):
         print("Using all columns instead.")
 
         if generate:
-            discounts_df.write_csv("new_discount_codes.csv")
+            discounts_df.write_csv("csv/output/new_discount_codes.csv")
             print(
-                f"\nSuccessfully generated new_discount_codes.csv with {len(discounts_df)} rows and {len(discounts_df.columns)} columns"
+                f"\nSuccessfully generated csv/output/new_discount_codes.csv with {len(discounts_df)} rows and {len(discounts_df.columns)} columns"
             )

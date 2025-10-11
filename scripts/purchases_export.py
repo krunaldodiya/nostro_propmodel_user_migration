@@ -196,12 +196,14 @@ def export_purchases(generate=False):
         print(purchases_df.head())
 
         if generate:
-            purchases_df.write_csv("new_purchases.csv")
+            purchases_df.write_csv("csv/output/new_purchases.csv")
             print(
-                f"\nSuccessfully generated new_purchases.csv with {len(purchases_df)} rows and {len(purchases_df.columns)} columns"
+                f"\nSuccessfully generated csv/output/new_purchases.csv with {len(purchases_df)} rows and {len(purchases_df.columns)} columns"
             )
         else:
-            print("\nTo generate new_purchases.csv, run with --generate flag:")
+            print(
+                "\nTo generate csv/output/new_purchases.csv, run with --generate flag:"
+            )
             print("  uv run main.py --generate --purchases")
 
     except json.JSONDecodeError as e:
@@ -209,7 +211,7 @@ def export_purchases(generate=False):
         print("Using all columns instead.")
 
         if generate:
-            purchases_df.write_csv("new_purchases.csv")
+            purchases_df.write_csv("csv/output/new_purchases.csv")
             print(
-                f"\nSuccessfully generated new_purchases.csv with {len(purchases_df)} rows and {len(purchases_df.columns)} columns"
+                f"\nSuccessfully generated csv/output/new_purchases.csv with {len(purchases_df)} rows and {len(purchases_df.columns)} columns"
             )
