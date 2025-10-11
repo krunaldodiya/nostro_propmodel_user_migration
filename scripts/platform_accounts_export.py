@@ -24,6 +24,45 @@ def export_platform_accounts(generate=False):
     accounts_df = accounts_df.filter(~pl.col("login").str.starts_with("D#"))
     print(f"Remaining MT5 accounts after filtering: {len(accounts_df)}")
 
+    # Check for and handle duplicate purchase_ids and logins
+    print("\nChecking for duplicate purchase_ids and logins...")
+
+    # Check purchase_id duplicates
+    unique_purchase_ids = accounts_df["purchase_id"].n_unique()
+    total_purchase_ids = len(accounts_df)
+    purchase_duplicates = total_purchase_ids - unique_purchase_ids
+
+    if purchase_duplicates > 0:
+        print(
+            f"Found {purchase_duplicates} duplicate purchase_ids out of {total_purchase_ids} total records"
+        )
+        print(
+            "Removing duplicates by keeping the first occurrence of each purchase_id..."
+        )
+        accounts_df = accounts_df.unique(subset=["purchase_id"], keep="first")
+        print(f"After removing purchase_id duplicates: {len(accounts_df)} records")
+        print(
+            f"Removed {total_purchase_ids - len(accounts_df)} duplicate purchase_id records"
+        )
+    else:
+        print("✅ No duplicate purchase_ids found")
+
+    # Check login duplicates
+    unique_logins = accounts_df["login"].n_unique()
+    total_logins = len(accounts_df)
+    login_duplicates = total_logins - unique_logins
+
+    if login_duplicates > 0:
+        print(
+            f"Found {login_duplicates} duplicate logins out of {total_logins} total records"
+        )
+        print("Removing duplicates by keeping the first occurrence of each login...")
+        accounts_df = accounts_df.unique(subset=["login"], keep="first")
+        print(f"After removing login duplicates: {len(accounts_df)} records")
+        print(f"Removed {total_logins - len(accounts_df)} duplicate login records")
+    else:
+        print("✅ No duplicate logins found")
+
     # Load account_stats.csv for group mapping (primary source)
     print("\nLoading csv/input/account_stats.csv for group mapping...")
     try:
