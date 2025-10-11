@@ -1,13 +1,13 @@
 {
   "export_name": "Platform Accounts",
   "source_file": "csv/input/mt5_users.csv",
-  "generated_at": "2025-10-11T13:11:44.630574",
+  "generated_at": "2025-10-11T16:55:25.459618",
   "processing_steps": [
     {
       "step_name": "TradeLocker Filtering",
       "description": "Remove TradeLocker entries (login IDs starting with 'D#')",
-      "records_before": 89881,
-      "records_after": 88642,
+      "records_before": 90541,
+      "records_after": 89302,
       "records_removed": 1239,
       "reason": "TradeLocker entries are not MT5 accounts and should be excluded from platform accounts",
       "details": {
@@ -18,36 +18,36 @@
     {
       "step_name": "Purchase ID Deduplication",
       "description": "Remove duplicate purchase_ids, keeping first occurrence",
-      "records_before": 88642,
-      "records_after": 87984,
+      "records_before": 89302,
+      "records_after": 88644,
       "records_removed": 658,
       "reason": "Database constraint violation - purchase_id must be unique",
       "details": {
         "duplicate_purchase_ids": 658,
-        "unique_purchase_ids": 87984
+        "unique_purchase_ids": 88644
       }
     },
     {
       "step_name": "Login Deduplication",
       "description": "Remove duplicate logins, keeping first occurrence",
-      "records_before": 87984,
-      "records_after": 87983,
+      "records_before": 88644,
+      "records_after": 88643,
       "records_removed": 1,
       "reason": "Database constraint violation - login must be unique",
       "details": {
         "duplicate_logins": 1,
-        "unique_logins": 87983
+        "unique_logins": 88643
       }
     },
     {
       "step_name": "Group Information Filtering",
       "description": "Remove accounts without group information",
-      "records_before": 87983,
-      "records_after": 87980,
+      "records_before": 88643,
+      "records_after": 88640,
       "records_removed": 3,
       "reason": "Accounts without group information cannot be properly categorized",
       "details": {
-        "accounts_with_groups": 87980,
+        "accounts_with_groups": 88640,
         "accounts_without_groups": 3,
         "group_mapping_source": "account_stats.csv"
       }
@@ -55,25 +55,25 @@
     {
       "step_name": "Platform Group Mapping Filtering",
       "description": "Remove accounts that don't match valid platform group combinations",
-      "records_before": 87980,
-      "records_after": 67930,
-      "records_removed": 20050,
+      "records_before": 88640,
+      "records_after": 68483,
+      "records_removed": 20157,
       "reason": "Only accounts matching valid platform group combinations are included",
       "details": {
         "valid_combinations": 32,
-        "accounts_removed": 20050
+        "accounts_removed": 20157
       }
     }
   ],
   "final_statistics": {
-    "total_records": 67930,
+    "total_records": 68483,
     "total_columns": 30,
     "file_size": "22M"
   },
   "filtering_summary": {
-    "original_records": 89881,
-    "final_records": 67930,
-    "total_removed": 21951,
-    "retention_rate": 75.58
+    "original_records": 90541,
+    "final_records": 68483,
+    "total_removed": 22058,
+    "retention_rate": 75.64
   }
 }

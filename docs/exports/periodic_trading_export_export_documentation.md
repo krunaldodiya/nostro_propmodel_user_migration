@@ -3,13 +3,13 @@
 ## Overview
 - **Export Name**: Periodic Trading Export
 - **Source File**: csv/input/periodic_trading_export.csv
-- **Generated At**: 2025-10-11T13:11:51.616746
+- **Generated At**: 2025-10-11T16:55:32.618472
 
 ## Summary
 - **Original Records**: 9,445,168
-- **Final Records**: 8,705,821
-- **Records Removed**: 739,347
-- **Retention Rate**: 92.17%
+- **Final Records**: 8,671,603
+- **Records Removed**: 773,565
+- **Retention Rate**: 91.81%
 
 ## Processing Steps
 
@@ -19,18 +19,18 @@
 
 **Statistics**:
 - Records Before: 9,445,168
-- Records After: 8,705,821
-- Records Removed: 739,347
+- Records After: 8,671,603
+- Records Removed: 773,565
 
 **Reason**: Foreign key constraint - platform_account_uuid must exist in platform_accounts table
 
 **Details**:
-- trading_with_accounts: 8705821
-- trading_without_accounts: 739347
+- trading_with_accounts: 8671603
+- trading_without_accounts: 773565
 
 ## Final Statistics
 
-- **Total Records**: 8,705,821
+- **Total Records**: 8,671,603
 - **Total Columns**: 15
 - **File Size**: 127M
 

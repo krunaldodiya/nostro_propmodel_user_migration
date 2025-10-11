@@ -1,30 +1,30 @@
 {
   "export_name": "Equity Data Daily",
   "source_file": "csv/input/equity_data_daily.csv",
-  "generated_at": "2025-10-11T13:11:46.847652",
+  "generated_at": "2025-10-11T16:55:28.072617",
   "processing_steps": [
     {
       "step_name": "Platform Account Mapping Filtering",
       "description": "Remove equity records without valid platform account mappings",
       "records_before": 3892814,
-      "records_after": 3321328,
-      "records_removed": 571486,
+      "records_after": 3297892,
+      "records_removed": 594922,
       "reason": "Foreign key constraint - platform_account_uuid must exist in platform_accounts table",
       "details": {
-        "equity_with_accounts": 3321328,
-        "equity_without_accounts": 571486
+        "equity_with_accounts": 3297892,
+        "equity_without_accounts": 594922
       }
     }
   ],
   "final_statistics": {
-    "total_records": 3321328,
+    "total_records": 3297892,
     "total_columns": 7,
     "file_size": "8M"
   },
   "filtering_summary": {
     "original_records": 3892814,
-    "final_records": 3321328,
-    "total_removed": 571486,
-    "retention_rate": 85.32
+    "final_records": 3297892,
+    "total_removed": 594922,
+    "retention_rate": 84.72
   }
 }

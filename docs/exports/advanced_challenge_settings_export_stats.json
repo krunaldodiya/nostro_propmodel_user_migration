@@ -1,7 +1,7 @@
 {
   "export_name": "Advanced Challenge Settings",
   "source_file": "Generated from platform data",
-  "generated_at": "2025-10-11T13:12:08.050895",
+  "generated_at": "2025-10-11T16:55:46.666515",
   "processing_steps": [
     {
       "step_name": "Platform Groups Processing",
@@ -19,23 +19,23 @@
       "step_name": "Platform Accounts Processing",
       "description": "Generate challenge settings for each platform account",
       "records_before": 32,
-      "records_after": 67962,
-      "records_removed": -67930,
+      "records_after": 68515,
+      "records_removed": -68483,
       "reason": "Each platform account needs default challenge settings",
       "details": {
-        "platform_accounts_processed": 67930,
+        "platform_accounts_processed": 68483,
         "platform_group_uuid_set_to_null": true
       }
     }
   ],
   "final_statistics": {
-    "total_records": 67962,
+    "total_records": 68515,
     "total_columns": 41,
     "file_size": "25M"
   },
   "filtering_summary": {
     "original_records": 0,
-    "final_records": 67962,
+    "final_records": 68515,
     "total_removed": 0,
     "retention_rate": 0
   }

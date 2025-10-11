@@ -1,13 +1,13 @@
 {
   "export_name": "Purchases",
   "source_file": "csv/input/purchases.csv",
-  "generated_at": "2025-10-11T13:11:45.534643",
+  "generated_at": "2025-10-11T16:55:26.350397",
   "processing_steps": [
     {
       "step_name": "User Mapping Filtering",
       "description": "Check for purchases without valid user mappings",
-      "records_before": 258662,
-      "records_after": 258662,
+      "records_before": 259881,
+      "records_after": 259881,
       "records_removed": 0,
       "reason": "All purchases have valid user mappings",
       "details": {
@@ -17,24 +17,24 @@
     {
       "step_name": "Discount Code Mapping",
       "description": "Map discount codes to new UUIDs",
-      "records_before": 258662,
-      "records_after": 258662,
+      "records_before": 259881,
+      "records_after": 259881,
       "records_removed": 0,
       "reason": "Discount codes are optional - null values are preserved",
       "details": {
-        "purchases_with_discounts": 115997,
-        "purchases_without_discounts": 142665
+        "purchases_with_discounts": 116016,
+        "purchases_without_discounts": 143865
       }
     }
   ],
   "final_statistics": {
-    "total_records": 258662,
+    "total_records": 259881,
     "total_columns": 20,
     "file_size": "15M"
   },
   "filtering_summary": {
-    "original_records": 258662,
-    "final_records": 258662,
+    "original_records": 259881,
+    "final_records": 259881,
     "total_removed": 0,
     "retention_rate": 100.0
   }

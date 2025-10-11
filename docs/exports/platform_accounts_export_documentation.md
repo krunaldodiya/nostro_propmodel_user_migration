@@ -3,13 +3,13 @@
 ## Overview
 - **Export Name**: Platform Accounts
 - **Source File**: csv/input/mt5_users.csv
-- **Generated At**: 2025-10-11T13:11:44.630574
+- **Generated At**: 2025-10-11T16:55:25.459618
 
 ## Summary
-- **Original Records**: 89,881
-- **Final Records**: 67,930
-- **Records Removed**: 21,951
-- **Retention Rate**: 75.58%
+- **Original Records**: 90,541
+- **Final Records**: 68,483
+- **Records Removed**: 22,058
+- **Retention Rate**: 75.64%
 
 ## Processing Steps
 
@@ -18,8 +18,8 @@
 **Description**: Remove TradeLocker entries (login IDs starting with 'D#')
 
 **Statistics**:
-- Records Before: 89,881
-- Records After: 88,642
+- Records Before: 90,541
+- Records After: 89,302
 - Records Removed: 1,239
 
 **Reason**: TradeLocker entries are not MT5 accounts and should be excluded from platform accounts
@@ -33,44 +33,44 @@
 **Description**: Remove duplicate purchase_ids, keeping first occurrence
 
 **Statistics**:
-- Records Before: 88,642
-- Records After: 87,984
+- Records Before: 89,302
+- Records After: 88,644
 - Records Removed: 658
 
 **Reason**: Database constraint violation - purchase_id must be unique
 
 **Details**:
 - duplicate_purchase_ids: 658
-- unique_purchase_ids: 87984
+- unique_purchase_ids: 88644
 
 ### Step 3: Login Deduplication
 
 **Description**: Remove duplicate logins, keeping first occurrence
 
 **Statistics**:
-- Records Before: 87,984
-- Records After: 87,983
+- Records Before: 88,644
+- Records After: 88,643
 - Records Removed: 1
 
 **Reason**: Database constraint violation - login must be unique
 
 **Details**:
 - duplicate_logins: 1
-- unique_logins: 87983
+- unique_logins: 88643
 
 ### Step 4: Group Information Filtering
 
 **Description**: Remove accounts without group information
 
 **Statistics**:
-- Records Before: 87,983
-- Records After: 87,980
+- Records Before: 88,643
+- Records After: 88,640
 - Records Removed: 3
 
 **Reason**: Accounts without group information cannot be properly categorized
 
 **Details**:
-- accounts_with_groups: 87980
+- accounts_with_groups: 88640
 - accounts_without_groups: 3
 - group_mapping_source: account_stats.csv
 
@@ -79,19 +79,19 @@
 **Description**: Remove accounts that don't match valid platform group combinations
 
 **Statistics**:
-- Records Before: 87,980
-- Records After: 67,930
-- Records Removed: 20,050
+- Records Before: 88,640
+- Records After: 68,483
+- Records Removed: 20,157
 
 **Reason**: Only accounts matching valid platform group combinations are included
 
 **Details**:
 - valid_combinations: 32
-- accounts_removed: 20050
+- accounts_removed: 20157
 
 ## Final Statistics
 
-- **Total Records**: 67,930
+- **Total Records**: 68,483
 - **Total Columns**: 30
 - **File Size**: 22M
 

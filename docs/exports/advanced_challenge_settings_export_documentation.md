@@ -3,11 +3,11 @@
 ## Overview
 - **Export Name**: Advanced Challenge Settings
 - **Source File**: Generated from platform data
-- **Generated At**: 2025-10-11T13:12:08.050895
+- **Generated At**: 2025-10-11T16:55:46.666515
 
 ## Summary
 - **Original Records**: 0
-- **Final Records**: 67,962
+- **Final Records**: 68,515
 - **Records Removed**: 0
 - **Retention Rate**: 0%
 
@@ -34,18 +34,18 @@
 
 **Statistics**:
 - Records Before: 32
-- Records After: 67,962
-- Records Removed: -67,930
+- Records After: 68,515
+- Records Removed: -68,483
 
 **Reason**: Each platform account needs default challenge settings
 
 **Details**:
-- platform_accounts_processed: 67930
+- platform_accounts_processed: 68483
 - platform_group_uuid_set_to_null: True
 
 ## Final Statistics
 
-- **Total Records**: 67,962
+- **Total Records**: 68,515
 - **Total Columns**: 41
 - **File Size**: 25M
 

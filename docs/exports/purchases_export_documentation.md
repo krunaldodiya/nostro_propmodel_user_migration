@@ -3,11 +3,11 @@
 ## Overview
 - **Export Name**: Purchases
 - **Source File**: csv/input/purchases.csv
-- **Generated At**: 2025-10-11T13:11:45.534643
+- **Generated At**: 2025-10-11T16:55:26.350397
 
 ## Summary
-- **Original Records**: 258,662
-- **Final Records**: 258,662
+- **Original Records**: 259,881
+- **Final Records**: 259,881
 - **Records Removed**: 0
 - **Retention Rate**: 100.0%
 
@@ -18,8 +18,8 @@
 **Description**: Check for purchases without valid user mappings
 
 **Statistics**:
-- Records Before: 258,662
-- Records After: 258,662
+- Records Before: 259,881
+- Records After: 259,881
 - Records Removed: 0
 
 **Reason**: All purchases have valid user mappings
@@ -32,19 +32,19 @@
 **Description**: Map discount codes to new UUIDs
 
 **Statistics**:
-- Records Before: 258,662
-- Records After: 258,662
+- Records Before: 259,881
+- Records After: 259,881
 - Records Removed: 0
 
 **Reason**: Discount codes are optional - null values are preserved
 
 **Details**:
-- purchases_with_discounts: 115997
-- purchases_without_discounts: 142665
+- purchases_with_discounts: 116016
+- purchases_without_discounts: 143865
 
 ## Final Statistics
 
-- **Total Records**: 258,662
+- **Total Records**: 259,881
 - **Total Columns**: 20
 - **File Size**: 15M
 

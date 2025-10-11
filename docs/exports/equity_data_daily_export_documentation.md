@@ -3,13 +3,13 @@
 ## Overview
 - **Export Name**: Equity Data Daily
 - **Source File**: csv/input/equity_data_daily.csv
-- **Generated At**: 2025-10-11T13:11:46.847652
+- **Generated At**: 2025-10-11T16:55:28.072617
 
 ## Summary
 - **Original Records**: 3,892,814
-- **Final Records**: 3,321,328
-- **Records Removed**: 571,486
-- **Retention Rate**: 85.32%
+- **Final Records**: 3,297,892
+- **Records Removed**: 594,922
+- **Retention Rate**: 84.72%
 
 ## Processing Steps
 
@@ -19,18 +19,18 @@
 
 **Statistics**:
 - Records Before: 3,892,814
-- Records After: 3,321,328
-- Records Removed: 571,486
+- Records After: 3,297,892
+- Records Removed: 594,922
 
 **Reason**: Foreign key constraint - platform_account_uuid must exist in platform_accounts table
 
 **Details**:
-- equity_with_accounts: 3321328
-- equity_without_accounts: 571486
+- equity_with_accounts: 3297892
+- equity_without_accounts: 594922
 
 ## Final Statistics
 
-- **Total Records**: 3,321,328
+- **Total Records**: 3,297,892
 - **Total Columns**: 7
 - **File Size**: 8M
 
