@@ -622,7 +622,7 @@ def export_platform_accounts(generate=False):
 
     # Scenario 1.1: Pending Funded Phase
     # Conditions: funded_at is not null AND group is NOT in funded groups
-    # Set: current_phase = 1, status = 2, funded_status = 0
+    # Set: current_phase = preserve original phase, status = 2, funded_status = 0
     print("\n  Applying Pending Funded Phase logic...")
 
     accounts_df = accounts_df.with_columns(
@@ -630,7 +630,9 @@ def export_platform_accounts(generate=False):
         pl.when(
             pl.col("funded_at").is_not_null() & ~pl.col("group").is_in(funded_groups)
         )
-        .then(pl.lit(1))  # Pending Funded Phase: current_phase = 1
+        .then(
+            pl.col("current_phase")
+        )  # Pending Funded Phase: preserve original phase from group pattern
         .otherwise(pl.col("current_phase"))  # Keep existing value from Scenario 2
         .alias("current_phase")
     )
@@ -662,7 +664,7 @@ def export_platform_accounts(generate=False):
     print(f"    Total Pending Funded Phase accounts: {pending_funded_accounts}")
 
     if pending_funded_accounts > 0:
-        print(f"      current_phase = 1")
+        print(f"      current_phase = preserve original phase (1/2/3)")
         print(f"      status = 2 (pending)")
         print(f"      funded_status = 0")
 
@@ -722,7 +724,7 @@ def export_platform_accounts(generate=False):
 
     # Scenario 1.3: Rejected Funded Phase
     # Conditions: funded_at is not null AND group is NOT in funded groups AND is_active = 0
-    # Set: current_phase = 1, status = 0, funded_status = 2
+    # Set: current_phase = preserve original phase, status = 0, funded_status = 2
     print("\n  Applying Rejected Funded Phase logic...")
 
     accounts_df = accounts_df.with_columns(
@@ -732,7 +734,9 @@ def export_platform_accounts(generate=False):
             & ~pl.col("group").is_in(funded_groups)
             & (pl.col("is_active") == 0)
         )
-        .then(pl.lit(1))  # Rejected Funded Phase: current_phase = 1
+        .then(
+            pl.col("current_phase")
+        )  # Rejected Funded Phase: preserve original phase from group pattern
         .otherwise(pl.col("current_phase"))  # Keep existing value
         .alias("current_phase")
     )
@@ -770,7 +774,7 @@ def export_platform_accounts(generate=False):
     print(f"    Total Rejected Funded Phase accounts: {rejected_funded_accounts}")
 
     if rejected_funded_accounts > 0:
-        print(f"      current_phase = 1")
+        print(f"      current_phase = preserve original phase (1/2/3)")
         print(f"      status = 0 (inactive)")
         print(f"      funded_status = 2 (rejected)")
 

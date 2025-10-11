@@ -54,16 +54,16 @@ When an account has a `funded_at` timestamp, it means the account has gone throu
 
 **Result:**
 
-- `current_phase = 1`
+- `current_phase = 1, 2, or 3` (preserves original phase from group pattern)
 - `status = 2` (pending)
 - `funded_status = 0` (not funded)
 
 **Example:**
 
 ```
-Account with group "demo\Nostro\U-DAG-1-B" and funded_at = "2024-01-15"
+Account with group "demo\Nostro\U-DST-2-B" and funded_at = "2024-01-15"
 → Pending Funded Phase (group not in funded list)
-→ current_phase = 1, status = 2, funded_status = 0
+→ current_phase = 2 (from group pattern 2-B), status = 2, funded_status = 0
 ```
 
 #### 1.2 Approved Funded Phase
@@ -98,16 +98,16 @@ Account with group "demo\Nostro\U-FTF-1-A", funded_at = "2024-01-15", is_active 
 
 **Result:**
 
-- `current_phase = 1`
+- `current_phase = 1, 2, or 3` (preserves original phase from group pattern)
 - `status = 0` (inactive)
 - `funded_status = 2` (rejected)
 
 **Example:**
 
 ```
-Account with group "demo\Nostro\U-DAG-1-B", funded_at = "2024-01-15", is_active = 0
+Account with group "demo\Nostro\U-SAG-3-B", funded_at = "2024-01-15", is_active = 0
 → Rejected Funded Phase (group not in funded list + inactive)
-→ current_phase = 1, status = 0, funded_status = 2
+→ current_phase = 3 (from group pattern 3-B), status = 0, funded_status = 2
 ```
 
 ### Scenario 2: Evolution Phase (`funded_at` IS null)
@@ -157,11 +157,11 @@ Is funded_at null?
     │   │   └── NO → (This case is not explicitly handled in current logic)
     │   └── NO → Is is_active = 0?
     │       ├── YES → Rejected Funded Phase
-    │       │   ├── current_phase = 1
+    │       │   ├── current_phase = 1/2/3 (preserve from group pattern)
     │       │   ├── status = 0
     │       │   └── funded_status = 2
     │       └── NO → Pending Funded Phase
-    │           ├── current_phase = 1
+    │           ├── current_phase = 1/2/3 (preserve from group pattern)
     │           ├── status = 2
     │           └── funded_status = 0
 ```
@@ -177,9 +177,9 @@ Is funded_at null?
 ### current_phase Values
 
 - **0**: Funded phase (only for approved funded accounts)
-- **1**: Phase 1 (evaluation phase 1 or pending/rejected funded)
-- **2**: Phase 2 (evaluation phase 2)
-- **3**: Phase 3 (evaluation phase 3)
+- **1**: Phase 1 (evaluation phase 1, or pending/rejected funded from 1-A/1-B groups)
+- **2**: Phase 2 (evaluation phase 2, or pending/rejected funded from 2-A/2-B groups)
+- **3**: Phase 3 (evaluation phase 3, or pending/rejected funded from 3-A/3-B groups)
 
 ### status Values
 
@@ -201,8 +201,15 @@ Is funded_at null?
 3. **Funded Groups**: The list of funded groups is hardcoded in the script and represents the groups that accounts must be in to be considered "approved funded".
 
 4. **Edge Cases**:
+
    - Accounts with `funded_at` not null, group in funded list, but `is_active = 0` are not explicitly handled in the current logic
    - The logic assumes that if an account is in a funded group and has `funded_at` set, it should be active
+
+5. **Current Implementation Bug**:
+   - **⚠️ BUG**: The current script incorrectly sets `current_phase = 1` for both Pending Funded Phase and Rejected Funded Phase
+   - **Should be**: Preserve the original `current_phase` from the group pattern (1, 2, or 3)
+   - **Example**: Account with group `demo\Nostro\U-DST-2-B` should have `current_phase = 2`, not `current_phase = 1`
+   - **Fix needed**: Update the script to use `pl.col("current_phase")` instead of `pl.lit(1)` for pending and rejected funded phases
 
 ## Testing Scenarios
 
