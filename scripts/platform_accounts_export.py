@@ -105,10 +105,14 @@ def export_platform_accounts(generate=False):
             .alias("group_from_stats")
         )
 
-        # Keep original group for funded status logic, use account_stats group for reference only
-        # The 'group' column will remain as the original mt5_users group for funded status logic
-        # The 'group_from_stats' will be used as 'remote_group_name' for reference
-        # DO NOT override the original group - it's needed for funded status logic
+        # Merge group information: use account_stats group if available, otherwise mt5_users group
+        # This ensures we have the most complete group information for funded status logic
+        accounts_df = accounts_df.with_columns(
+            pl.when(pl.col("group_from_stats").is_not_null())
+            .then(pl.col("group_from_stats"))
+            .otherwise(pl.col("group_backup"))
+            .alias("group")
+        )
 
         # Count the sources
         from_stats = accounts_df.filter(pl.col("group_from_stats").is_not_null()).height
@@ -123,10 +127,10 @@ def export_platform_accounts(generate=False):
         print(f"  Group from mt5_users (backup): {from_backup}")
         print(f"  No group information: {no_group}")
 
-        # Create remote_group_name before dropping temporary columns
+        # Create remote_group_name using the merged group information
         accounts_df = accounts_df.with_columns(
-            pl.when(pl.col("group_from_stats").is_not_null())
-            .then(pl.col("group_from_stats"))
+            pl.when(pl.col("group").is_not_null())
+            .then(pl.col("group"))
             .otherwise(pl.lit("demo\\PropModel\\common"))
             .alias("remote_group_name")
         )
