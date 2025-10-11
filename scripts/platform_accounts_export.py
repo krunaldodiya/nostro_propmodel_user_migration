@@ -105,13 +105,10 @@ def export_platform_accounts(generate=False):
             .alias("group_from_stats")
         )
 
-        # Use group_from_stats if available, otherwise use group_backup
-        accounts_df = accounts_df.with_columns(
-            pl.when(pl.col("group_from_stats").is_not_null())
-            .then(pl.col("group_from_stats"))
-            .otherwise(pl.col("group_backup"))
-            .alias("group")
-        )
+        # Keep original group for funded status logic, use account_stats group for reference only
+        # The 'group' column will remain as the original mt5_users group for funded status logic
+        # The 'group_from_stats' will be used as 'remote_group_name' for reference
+        # DO NOT override the original group - it's needed for funded status logic
 
         # Count the sources
         from_stats = accounts_df.filter(pl.col("group_from_stats").is_not_null()).height
@@ -125,6 +122,14 @@ def export_platform_accounts(generate=False):
         print(f"  Group from account_stats: {from_stats}")
         print(f"  Group from mt5_users (backup): {from_backup}")
         print(f"  No group information: {no_group}")
+
+        # Create remote_group_name before dropping temporary columns
+        accounts_df = accounts_df.with_columns(
+            pl.when(pl.col("group_from_stats").is_not_null())
+            .then(pl.col("group_from_stats"))
+            .otherwise(pl.lit("demo\\PropModel\\common"))
+            .alias("remote_group_name")
+        )
 
         # Drop temporary columns
         accounts_df = accounts_df.drop(["group_backup", "group_from_stats"])
@@ -346,11 +351,14 @@ def export_platform_accounts(generate=False):
         print("Please run: uv run main.py --generate --purchases")
         accounts_df = accounts_df.with_columns(pl.lit(None).alias("purchase_uuid"))
 
-    # Add updated_at column (copy from created_at)
+    # Add updated_at column (use funded_at if available, otherwise created_at)
     if "updated_at" not in accounts_df.columns:
         if "created_at" in accounts_df.columns:
             accounts_df = accounts_df.with_columns(
-                pl.col("created_at").alias("updated_at")
+                pl.when(pl.col("funded_at").is_not_null())
+                .then(pl.col("funded_at"))
+                .otherwise(pl.col("created_at"))
+                .alias("updated_at")
             )
 
     # Add deleted_at column (NULL by default)
@@ -372,11 +380,7 @@ def export_platform_accounts(generate=False):
     if "platform_name" not in accounts_df.columns:
         accounts_df = accounts_df.with_columns(pl.lit("MT5").alias("platform_name"))
 
-    # Add remote_group_name column (default to 'demo\PropModel\common')
-    if "remote_group_name" not in accounts_df.columns:
-        accounts_df = accounts_df.with_columns(
-            pl.lit("demo\\PropModel\\common").alias("remote_group_name")
-        )
+    # remote_group_name column is already created earlier in the script
 
     # Add profit_target column (copy from target)
     if "profit_target" not in accounts_df.columns:
@@ -600,8 +604,11 @@ def export_platform_accounts(generate=False):
     # Scenario 1: Funded Phase - For accounts where funded_at is not null
     print("\nApplying Scenario 1: Funded Phase (funded_at is not null)...")
 
-    # Define the list of funded groups
-    funded_groups = [
+    # Load funded groups dynamically from platform_groups.csv and merge with complete list
+    print("Loading funded groups from platform_groups.csv...")
+
+    # Complete hardcoded list (16 groups)
+    complete_funded_groups = [
         "demo\\Nostro\\U-FTF-1-A",
         "demo\\Nostro\\U-FTF-1-B",
         "demo\\Nostro\\U-COF-1-A",
@@ -619,6 +626,33 @@ def export_platform_accounts(generate=False):
         "demo\\Nostro\\U-TAF-1-A",
         "demo\\Nostro\\U-TAF-1-B",
     ]
+
+    try:
+        platform_groups_df = pl.read_csv("csv/output/new_platform_groups.csv")
+        dynamic_funded_groups = (
+            platform_groups_df["funded_group_name"].unique().sort().to_list()
+        )
+        print(
+            f"Loaded {len(dynamic_funded_groups)} funded groups from platform_groups.csv:"
+        )
+        for i, group in enumerate(dynamic_funded_groups, 1):
+            print(f"  {i}. {group}")
+
+        # Merge dynamic groups with complete list (remove duplicates)
+        funded_groups = list(set(complete_funded_groups + dynamic_funded_groups))
+        funded_groups.sort()
+
+        print(f"\nMerged with complete list: {len(funded_groups)} total funded groups")
+        print("Final merged funded groups:")
+        for i, group in enumerate(funded_groups, 1):
+            print(f"  {i}. {group}")
+
+    except FileNotFoundError:
+        print(
+            "Warning: platform_groups.csv not found. Using complete funded groups list."
+        )
+        funded_groups = complete_funded_groups
+        print(f"Using complete list with {len(funded_groups)} funded groups")
 
     # Scenario 1.1: Pending Funded Phase
     # Conditions: funded_at is not null AND group is NOT in funded groups
