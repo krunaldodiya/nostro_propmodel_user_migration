@@ -1,0 +1,30 @@
+{
+  "export_name": "Discount Codes",
+  "source_file": "csv/input/discount_codes.csv",
+  "generated_at": "2025-10-11T13:11:45.234435",
+  "processing_steps": [
+    {
+      "step_name": "Code Deduplication",
+      "description": "Remove duplicate discount codes, keeping first occurrence",
+      "records_before": 53900,
+      "records_after": 53892,
+      "records_removed": 8,
+      "reason": "Database constraint violation - code must be unique",
+      "details": {
+        "duplicate_codes": 8,
+        "unique_codes": 53892
+      }
+    }
+  ],
+  "final_statistics": {
+    "total_records": 53892,
+    "total_columns": 18,
+    "file_size": "1M"
+  },
+  "filtering_summary": {
+    "original_records": 53900,
+    "final_records": 53892,
+    "total_removed": 8,
+    "retention_rate": 99.99
+  }
+}

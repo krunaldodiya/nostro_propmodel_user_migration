@@ -1,0 +1,30 @@
+{
+  "export_name": "Periodic Trading Export",
+  "source_file": "csv/input/periodic_trading_export.csv",
+  "generated_at": "2025-10-11T13:11:51.616746",
+  "processing_steps": [
+    {
+      "step_name": "Platform Account Mapping Filtering",
+      "description": "Remove trading records without valid platform account mappings",
+      "records_before": 9445168,
+      "records_after": 8705821,
+      "records_removed": 739347,
+      "reason": "Foreign key constraint - platform_account_uuid must exist in platform_accounts table",
+      "details": {
+        "trading_with_accounts": 8705821,
+        "trading_without_accounts": 739347
+      }
+    }
+  ],
+  "final_statistics": {
+    "total_records": 8705821,
+    "total_columns": 15,
+    "file_size": "127M"
+  },
+  "filtering_summary": {
+    "original_records": 9445168,
+    "final_records": 8705821,
+    "total_removed": 739347,
+    "retention_rate": 92.17
+  }
+}

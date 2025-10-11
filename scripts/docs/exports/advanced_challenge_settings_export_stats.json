@@ -1,0 +1,30 @@
+{
+  "export_name": "Advanced Challenge Settings",
+  "source_file": "Generated from platform data",
+  "generated_at": "2025-10-11T13:10:35.732634",
+  "processing_steps": [
+    {
+      "step_name": "Data Generation",
+      "description": "Generate challenge settings from platform data",
+      "records_before": 0,
+      "records_after": 0,
+      "records_removed": 0,
+      "reason": "Source files not available",
+      "details": {
+        "status": "failed",
+        "error": "No such file or directory (os error 2): csv/output/new_platform_groups.csv"
+      }
+    }
+  ],
+  "final_statistics": {
+    "total_records": 0,
+    "total_columns": 41,
+    "file_size": "0M"
+  },
+  "filtering_summary": {
+    "original_records": 0,
+    "final_records": 0,
+    "total_removed": 0,
+    "retention_rate": 0
+  }
+}
