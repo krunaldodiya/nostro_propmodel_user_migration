@@ -78,6 +78,12 @@ Examples:
   # Generate equity data daily export
   uv run main.py --generate --equity-data-daily
 
+  # Preview advanced challenge settings export
+  uv run main.py --advanced-challenge-settings
+
+  # Generate advanced challenge settings export
+  uv run main.py --generate --advanced-challenge-settings
+
   # Generate all exports
   uv run main.py --generate --all
         """,
@@ -147,6 +153,12 @@ Examples:
         help="Export equity data daily table",
     )
 
+    parser.add_argument(
+        "--advanced-challenge-settings",
+        action="store_true",
+        help="Export advanced challenge settings table",
+    )
+
     parser.add_argument("--all", action="store_true", help="Export all tables")
 
     args = parser.parse_args()
@@ -164,6 +176,7 @@ Examples:
         or args.platform_events
         or args.periodic_trading_export
         or args.equity_data_daily
+        or args.advanced_challenge_settings
         or args.all
     ):
         parser.print_help()
@@ -185,6 +198,7 @@ Examples:
             "platform_events",
             "periodic_trading_export",
             "equity_data_daily",
+            "advanced_challenge_settings",
         ]
     else:
         if args.users:
@@ -209,6 +223,8 @@ Examples:
             exports_to_run.append("periodic_trading_export")
         if args.equity_data_daily:
             exports_to_run.append("equity_data_daily")
+        if args.advanced_challenge_settings:
+            exports_to_run.append("advanced_challenge_settings")
 
     # Run exports
     for export_type in exports_to_run:
@@ -265,6 +281,12 @@ Examples:
                 from scripts.equity_data_daily_export import export_equity_data_daily
 
                 export_equity_data_daily(generate=args.generate)
+            elif export_type == "advanced_challenge_settings":
+                from scripts.advanced_challenge_settings_export import (
+                    export_advanced_challenge_settings,
+                )
+
+                export_advanced_challenge_settings(generate=args.generate)
         except Exception as e:
             print(f"\n❌ Error during {export_type} export: {e}")
             import traceback
