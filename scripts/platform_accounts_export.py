@@ -279,7 +279,7 @@ def export_platform_accounts(generate=False):
                 & pl.col("group").is_in(funded_groups)
                 & (pl.col("is_active") == 1)
             )
-            .then(pl.lit(1))  # Approved Funded Phase: status = 1
+            .then(pl.col("is_active"))  # Approved Funded Phase: status = is_active
             .otherwise(pl.col("status"))  # Keep existing value
             .alias("status")
         )
