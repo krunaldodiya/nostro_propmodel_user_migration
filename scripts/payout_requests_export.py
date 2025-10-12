@@ -176,6 +176,22 @@ def export_payout_requests(generate: bool = False):
         pl.lit(scott_uuid).alias("note_created_by")
     )
 
+    # Map status 3 to status 4 to avoid conflicts
+    print("Mapping status 3 to status 4...")
+    payout_requests_df = payout_requests_df.with_columns(
+        pl.when(pl.col("status") == 3)
+        .then(pl.lit(4))
+        .otherwise(pl.col("status"))
+        .alias("status")
+    )
+
+    # Count how many records were affected
+    status_3_count = len(payout_requests_df.filter(pl.col("status") == 4))
+    if status_3_count > 0:
+        print(f"  Mapped {status_3_count} records from status 3 to status 4")
+    else:
+        print("  No records with status 3 found")
+
     # Remove old fields that are not in PostgreSQL schema
     print("Removing old fields not in PostgreSQL schema...")
     fields_to_remove = [
