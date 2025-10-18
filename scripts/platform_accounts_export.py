@@ -63,6 +63,27 @@ def export_platform_accounts(generate=False):
     else:
         print("✅ No duplicate logins found")
 
+    # Base funded groups used for funded status and remote group mappings
+    base_funded_groups = [
+        "demo\\Nostro\\U-FTF-1-A",
+        "demo\\Nostro\\U-FTF-1-B",
+        "demo\\Nostro\\U-COF-1-A",
+        "demo\\Nostro\\U-COF-1-B",
+        "demo\\Nostro\\U-SSF-1-A",
+        "demo\\Nostro\\U-SSF-1-B",
+        "demo\\Nostro\\U-SAF-1-A",
+        "demo\\Nostro\\U-SAF-1-B",
+        "demo\\Nostro\\U-DSF-1-A",
+        "demo\\Nostro\\U-DSF-1-B",
+        "demo\\Nostro\\U-DAF-1-A",
+        "demo\\Nostro\\U-DAF-1-B",
+        "demo\\Nostro\\U-TSF-1-A",
+        "demo\\Nostro\\U-TSF-1-B",
+        "demo\\Nostro\\U-TAF-1-A",
+        "demo\\Nostro\\U-TAF-1-B",
+    ]
+    funded_groups = base_funded_groups.copy()
+
     # Load account_stats.csv for group mapping (primary source)
     print("\nLoading csv/input/account_stats.csv for group mapping...")
     try:
@@ -147,11 +168,6 @@ def export_platform_accounts(generate=False):
             .alias("group")
         )
 
-        # Create remote_group_name - always set to demo\PropModel\common for reference only
-        accounts_df = accounts_df.with_columns(
-            pl.lit("demo\\PropModel\\common").alias("remote_group_name")
-        )
-
         # Apply funded status logic BEFORE dropping group columns
         print("\nApplying funded status logic...")
 
@@ -206,35 +222,17 @@ def export_platform_accounts(generate=False):
             )
 
         # Load funded groups for Scenario 1 logic
-        complete_funded_groups = [
-            "demo\\Nostro\\U-FTF-1-A",
-            "demo\\Nostro\\U-FTF-1-B",
-            "demo\\Nostro\\U-COF-1-A",
-            "demo\\Nostro\\U-COF-1-B",
-            "demo\\Nostro\\U-SSF-1-A",
-            "demo\\Nostro\\U-SSF-1-B",
-            "demo\\Nostro\\U-SAF-1-A",
-            "demo\\Nostro\\U-SAF-1-B",
-            "demo\\Nostro\\U-DSF-1-A",
-            "demo\\Nostro\\U-DSF-1-B",
-            "demo\\Nostro\\U-DAF-1-A",
-            "demo\\Nostro\\U-DAF-1-B",
-            "demo\\Nostro\\U-TSF-1-A",
-            "demo\\Nostro\\U-TSF-1-B",
-            "demo\\Nostro\\U-TAF-1-A",
-            "demo\\Nostro\\U-TAF-1-B",
-        ]
-
         try:
             platform_groups_df = pl.read_csv("csv/output/new_platform_groups.csv")
             dynamic_funded_groups = (
                 platform_groups_df["funded_group_name"].unique().sort().to_list()
             )
             # Merge dynamic groups with complete list (remove duplicates)
-            funded_groups = list(set(complete_funded_groups + dynamic_funded_groups))
-            funded_groups.sort()
+            funded_groups = sorted(
+                set(base_funded_groups + dynamic_funded_groups)
+            )
         except FileNotFoundError:
-            funded_groups = complete_funded_groups
+            funded_groups = base_funded_groups.copy()
 
         # Scenario 1.1: Pending Funded Phase
         # Conditions: funded_at is not null AND group is NOT in funded groups
@@ -338,6 +336,38 @@ def export_platform_accounts(generate=False):
                 pl.col("group").is_not_null() & (pl.col("group") != "")
             )
             print(f"Remaining accounts after filtering: {len(accounts_df)}")
+
+    # Populate remote_group_name based on funded criteria and action type
+    remote_group_funded = "demo\\Nostro\\U-FND-1-B"
+    remote_group_evaluation = "demo\\Nostro\\U-EVL-1-B"
+    remote_group_competition = "demo\\Nostro\\U-COM-1-B"
+
+    competition_condition = (
+        pl.col("action_type").cast(pl.Utf8).str.to_lowercase().eq("competition")
+        if "action_type" in accounts_df.columns
+        else pl.lit(False)
+    )
+
+    is_active_condition = (
+        pl.col("is_active") == 1
+        if "is_active" in accounts_df.columns
+        else pl.lit(False)
+    )
+
+    funded_account_condition = (
+        pl.col("funded_at").is_not_null()
+        & pl.col("group").is_in(funded_groups)
+        & is_active_condition
+    )
+
+    accounts_df = accounts_df.with_columns(
+        pl.when(competition_condition)
+        .then(pl.lit(remote_group_competition))
+        .when(funded_account_condition)
+        .then(pl.lit(remote_group_funded))
+        .otherwise(pl.lit(remote_group_evaluation))
+        .alias("remote_group_name")
+    )
 
     # Platform group UUID mapping will be done later after all columns are added
 
@@ -560,7 +590,7 @@ def export_platform_accounts(generate=False):
     if "platform_name" not in accounts_df.columns:
         accounts_df = accounts_df.with_columns(pl.lit("MT5").alias("platform_name"))
 
-    # remote_group_name column is already created earlier in the script
+    # remote_group_name column is populated earlier based on funded criteria
 
     # Add profit_target column (copy from target)
     if "profit_target" not in accounts_df.columns:
