@@ -196,15 +196,15 @@ Examples:
             "purchases",  # depends on: users, discount_codes
             # Phase 3: Second-level dependencies
             "platform_accounts",  # depends on: users, purchases, platform_groups
-            "equity_data_daily",  # depends on: platform_accounts
-            "periodic_trading_export",  # depends on: platform_accounts
-            # Phase 4: Third-level dependencies
+            # Phase 4: Third-level dependencies (all require platform_accounts output)
+            "account_stats",  # also needs platform_groups mapping
+            "platform_events",
+            "breach_account_activities",
+            "payout_requests",  # also needs users export
+            "equity_data_daily",
+            "periodic_trading_export",
+            # Phase 5: Remaining exports
             "advanced_challenge_settings",  # depends on: platform_groups, platform_accounts
-            # Note: The following exports are not yet implemented:
-            # "account_stats",  # depends on: platform_accounts
-            # "payout_requests",  # depends on: users
-            # "breach_account_activities",  # depends on: platform_accounts
-            # "platform_events",  # depends on: platform_accounts
         ]
     else:
         if args.users:
