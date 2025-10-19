@@ -63,6 +63,7 @@ For CSV generation, we need to follow the dependency chain:
 - `equity_data_daily_export.py`
 - `periodic_trading_export.py`
 - `advanced_challenge_settings_export.py`
+- `default_challenge_settings_export.py`
 
 ❌ **Not Implemented (Missing Scripts):**
 
@@ -72,7 +73,6 @@ For CSV generation, we need to follow the dependency chain:
 - `account_stats_export.py`
 - `breach_account_activities_export.py`
 - `platform_events_export.py`
-- `default_challenge_settings_export.py`
 
 ## Usage
 

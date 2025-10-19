@@ -84,6 +84,12 @@ Examples:
   # Generate advanced challenge settings export
   uv run main.py --generate --advanced-challenge-settings
 
+  # Preview default challenge settings export
+  uv run main.py --default-challenge-settings
+
+  # Generate default challenge settings export
+  uv run main.py --generate --default-challenge-settings
+
   # Generate all exports (in dependency order)
   uv run main.py --generate --all
         """,
@@ -159,6 +165,12 @@ Examples:
         help="Export advanced challenge settings table",
     )
 
+    parser.add_argument(
+        "--default-challenge-settings",
+        action="store_true",
+        help="Export default challenge settings table",
+    )
+
     parser.add_argument("--all", action="store_true", help="Export all tables")
 
     args = parser.parse_args()
@@ -177,6 +189,7 @@ Examples:
         or args.periodic_trading_export
         or args.equity_data_daily
         or args.advanced_challenge_settings
+        or args.default_challenge_settings
         or args.all
     ):
         parser.print_help()
@@ -190,6 +203,7 @@ Examples:
         exports_to_run = [
             # Phase 1: Independent tables (no dependencies)
             "users",
+            "default_challenge_settings",
             "discount_codes",
             "platform_groups",
             # Phase 2: First-level dependencies
@@ -231,6 +245,8 @@ Examples:
             exports_to_run.append("equity_data_daily")
         if args.advanced_challenge_settings:
             exports_to_run.append("advanced_challenge_settings")
+        if args.default_challenge_settings:
+            exports_to_run.append("default_challenge_settings")
 
     # Run exports in dependency order
     for export_type in exports_to_run:
@@ -293,6 +309,12 @@ Examples:
                 )
 
                 export_advanced_challenge_settings(generate=args.generate)
+            elif export_type == "default_challenge_settings":
+                from scripts.default_challenge_settings_export import (
+                    export_default_challenge_settings,
+                )
+
+                export_default_challenge_settings(generate=args.generate)
         except Exception as e:
             print(f"\n❌ Error during {export_type} export: {e}")
             import traceback
