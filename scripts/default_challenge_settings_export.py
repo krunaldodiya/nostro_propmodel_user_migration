@@ -1,7 +1,6 @@
 import polars as pl
 from pathlib import Path
 
-
 DEFAULT_SETTINGS_INPUT_PATH = Path("csv/input/default_challenge_settings.csv")
 USERS_OUTPUT_PATH = Path("csv/output/new_users.csv")
 DEFAULT_SETTINGS_OUTPUT_PATH = Path("csv/output/new_default_challenge_settings.csv")
@@ -10,7 +9,8 @@ TARGET_USER_EMAIL = "scott@nostro.co"
 
 def export_default_challenge_settings(generate: bool = False) -> None:
     """
-    Export default challenge settings ensuring created_by references Scott's user UUID.
+    Export default challenge settings ensuring created_by and updated_by
+    reference Scott's user UUID.
 
     Args:
         generate (bool): When True, writes csv/output/new_default_challenge_settings.csv.
@@ -22,6 +22,7 @@ def export_default_challenge_settings(generate: bool = False) -> None:
             f"Source file not found: {DEFAULT_SETTINGS_INPUT_PATH}. "
             "Ensure the default challenge settings CSV is available in csv/input/."
         )
+
     settings_df = pl.read_csv(DEFAULT_SETTINGS_INPUT_PATH)
     print(f"Loaded {len(settings_df)} default challenge settings row(s)")
 
@@ -50,8 +51,11 @@ def export_default_challenge_settings(generate: bool = False) -> None:
     scott_uuid = scott_df.select("uuid").item()
     print(f"Resolved Scott's UUID: {scott_uuid}")
 
-    # Inject created_by with Scott's UUID (overwrite existing value if present)
-    settings_df = settings_df.with_columns(pl.lit(scott_uuid).alias("created_by"))
+    # Inject created_by and updated_by with Scott's UUID (overwrite existing values if present)
+    columns_to_add = [pl.lit(scott_uuid).alias("created_by")]
+    if "updated_by" in settings_df.columns:
+        columns_to_add.append(pl.lit(scott_uuid).alias("updated_by"))
+    settings_df = settings_df.with_columns(columns_to_add)
 
     # Reorder columns to keep created_by before updated_by when possible
     column_order = list(settings_df.columns)
