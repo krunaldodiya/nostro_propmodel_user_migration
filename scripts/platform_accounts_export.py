@@ -37,13 +37,111 @@ def export_platform_accounts(generate=False):
             f"Found {purchase_duplicates} duplicate purchase_ids out of {total_purchase_ids} total records"
         )
         print(
-            "Removing duplicates by keeping the first occurrence of each purchase_id..."
+            "Removing duplicates by purchase_id while preferring user-specified login when available..."
         )
-        accounts_df = accounts_df.unique(subset=["purchase_id"], keep="first")
-        print(f"After removing purchase_id duplicates: {len(accounts_df)} records")
-        print(
-            f"Removed {total_purchase_ids - len(accounts_df)} duplicate purchase_id records"
-        )
+
+        # Attempt to load user-provided preferred logins for duplicate purchase_ids.
+        # The file should contain two columns: login,purchase_id (as provided in the repo attachments)
+        preferred_map = {}
+        try:
+            pref_df = pl.read_csv("csv/input/duplicate_mt5_purchases.csv")
+            # Ensure types are consistent
+            pref_df = pref_df.select(
+                [
+                    pl.col("purchase_id").cast(pl.Int64),
+                    pl.col("login").cast(pl.Utf8),
+                ]
+            )
+            # Build mapping purchase_id -> preferred login (string)
+            preferred_map = dict(zip(pref_df["purchase_id"], pref_df["login"]))
+            print(f"Loaded {len(preferred_map)} preferred duplicate purchase mappings")
+        except FileNotFoundError:
+            print(
+                "No csv/input/duplicate_mt5_purchases.csv found — falling back to original dedup behavior"
+            )
+        except Exception as e:
+            print(
+                f"Warning: failed to load preferred duplicates file: {e}. Falling back to original dedup behavior"
+            )
+
+        if preferred_map:
+            # Cast purchase_id to Int64 to be safe
+            accounts_df = accounts_df.with_columns(pl.col("purchase_id").cast(pl.Int64))
+
+            # Build a DataFrame for preferred mappings and join it to accounts_df on purchase_id
+            pref_items = [(int(k), str(v)) for k, v in preferred_map.items()]
+            pref_df2 = (
+                pl.DataFrame(pref_items, schema=["purchase_id", "_preferred_login"])
+                if pref_items
+                else pl.DataFrame()
+            )
+
+            if len(pref_df2) > 0:
+                # Ensure types
+                pref_df2 = pref_df2.with_columns(pl.col("purchase_id").cast(pl.Int64))
+                # Left join so every account row gets a _preferred_login (or null)
+                accounts_df = accounts_df.join(pref_df2, on="purchase_id", how="left")
+
+                # Mark rows where login equals preferred_login
+                accounts_df = accounts_df.with_columns(
+                    (pl.col("login").cast(pl.Utf8) == pl.col("_preferred_login"))
+                    .cast(pl.Int8)
+                    .alias("_preferred_flag")
+                )
+
+                # Build final selection: for purchase_ids where a preferred login exists in the data,
+                # keep that row. For remaining purchase_ids, keep the first occurrence.
+                # matched: rows where login == preferred_login
+                matched = accounts_df.filter(pl.col("_preferred_flag") == 1)
+                # keep only one matched row per purchase_id (if multiples, keep first)
+                matched = matched.unique(subset=["purchase_id"], keep="first")
+
+                # remaining purchase_ids that don't have a matched preferred login
+                matched_pids = (
+                    set(matched["purchase_id"].to_list()) if len(matched) > 0 else set()
+                )
+                others = accounts_df.filter(
+                    ~pl.col("purchase_id").is_in(list(matched_pids))
+                )
+                # keep first occurrence for remaining purchase_ids
+                others = others.unique(subset=["purchase_id"], keep="first")
+
+                # concat matched + others to form the deduped dataframe
+                accounts_df = (
+                    pl.concat([matched, others]) if len(matched) > 0 else others
+                )
+                after_len = len(accounts_df)
+                print(
+                    f"After preferring mapped logins, records: {after_len} (removed {total_purchase_ids - after_len})"
+                )
+
+                # Drop helper columns if present
+                drop_cols = [
+                    c
+                    for c in ["_preferred_flag", "_preferred_login"]
+                    if c in accounts_df.columns
+                ]
+                if drop_cols:
+                    accounts_df = accounts_df.drop(drop_cols)
+            else:
+                # No valid pref_df rows
+                print(
+                    "Preferred mapping file was empty after parsing — falling back to first-occurrence dedupe"
+                )
+                accounts_df = accounts_df.unique(subset=["purchase_id"], keep="first")
+                print(
+                    f"After removing purchase_id duplicates: {len(accounts_df)} records"
+                )
+                print(
+                    f"Removed {total_purchase_ids - len(accounts_df)} duplicate purchase_id records"
+                )
+        else:
+            # No preferred mappings available — fallback to keeping first occurrence
+            accounts_df = accounts_df.unique(subset=["purchase_id"], keep="first")
+            print(f"After removing purchase_id duplicates: {len(accounts_df)} records")
+            print(
+                f"Removed {total_purchase_ids - len(accounts_df)} duplicate purchase_id records"
+            )
     else:
         print("✅ No duplicate purchase_ids found")
 
@@ -228,9 +326,7 @@ def export_platform_accounts(generate=False):
                 platform_groups_df["funded_group_name"].unique().sort().to_list()
             )
             # Merge dynamic groups with complete list (remove duplicates)
-            funded_groups = sorted(
-                set(base_funded_groups + dynamic_funded_groups)
-            )
+            funded_groups = sorted(set(base_funded_groups + dynamic_funded_groups))
         except FileNotFoundError:
             funded_groups = base_funded_groups.copy()
 
