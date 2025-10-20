@@ -154,6 +154,12 @@ Examples:
     )
 
     parser.add_argument(
+        "--periodic-trading-export-last-6-months",
+        action="store_true",
+        help="Export periodic trading export table",
+    )
+
+    parser.add_argument(
         "--equity-data-daily",
         action="store_true",
         help="Export equity data daily table",
@@ -187,6 +193,7 @@ Examples:
         or args.breach_account_activities
         or args.platform_events
         or args.periodic_trading_export
+        or args.periodic_trading_export_last_6_months
         or args.equity_data_daily
         or args.advanced_challenge_settings
         or args.default_challenge_settings
@@ -217,6 +224,7 @@ Examples:
             "payout_requests",  # also needs users export
             "equity_data_daily",
             "periodic_trading_export",
+            "periodic_trading_export_last_6_months",
             # Phase 5: Remaining exports
             "advanced_challenge_settings",  # depends on: platform_groups, platform_accounts
         ]
@@ -241,6 +249,8 @@ Examples:
             exports_to_run.append("platform_events")
         if args.periodic_trading_export:
             exports_to_run.append("periodic_trading_export")
+        if args.periodic_trading_export_last_6_months:
+            exports_to_run.append("periodic_trading_export_last_6_months")
         if args.equity_data_daily:
             exports_to_run.append("equity_data_daily")
         if args.advanced_challenge_settings:
@@ -299,6 +309,12 @@ Examples:
                 )
 
                 export_periodic_trading_export(generate=args.generate)
+            elif export_type == "periodic_trading_export_last_6_months":
+                from scripts.periodic_trading_export_last_6_months import (
+                    export_periodic_trading_export_last_6_months,
+                )
+
+                export_periodic_trading_export_last_6_months(generate=args.generate)
             elif export_type == "equity_data_daily":
                 from scripts.equity_data_daily_export import export_equity_data_daily
 
